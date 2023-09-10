@@ -21,23 +21,36 @@ set(AMP_FILE_IO_DIR ${CMAKE_CURRENT_SOURCE_DIR}/file_dump)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(AMP_EXECUTABLE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message("Detected Linux operating system")
-    message("Detected Linux OS version: ${CMAKE_SYSTEM_VERSION}")
-    # Install and Link to static libraries built for the OS
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install/linux)
-    link_directories(install/linux/lib)
+
+    execute_process(COMMAND bash -c "lsb_release -rs"
+        OUTPUT_VARIABLE LINUX_UBUNTU_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    if(LINUX_UBUNTU_VERSION VERSION_EQUAL "22.04")
+        message("Detected Linux OS version: 22.04")
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install/ubuntu22)
+        # Install and Link to static libraries built for the OS
+    elseif(LINUX_UBUNTU_VERSION VERSION_EQUAL "20.04")
+        message("Detected Linux OS version: 20.04")
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install/ubuntu20)
+    else()
+        message(WARNING "Unsupported Linux operating system: ${LINUX_UBUNTU_VERSION}, defaulting to ubuntu20 build")
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install/ubuntu20)
+    endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     message("Detected macOS operating system")
     message("Detected macOS version: ${CMAKE_SYSTEM_VERSION}")
     set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/install/macos)
-    link_directories(install/macos/lib)
 else()
     message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
+link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+set(AMP_EXECUTABLE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin)
+set(AMP_EXECUTABLE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 link_directories(install)
 
@@ -70,3 +83,5 @@ endif()
 
 add_subdirectory(scripts)
 add_subdirectory(ws)
+
+file(COPY ${AMP_EXECUTABLE_DIRECTORY} DESTINATION ${AMP_EXECUTABLE_OUTPUT_DIRECTORY})
