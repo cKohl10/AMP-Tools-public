@@ -6,6 +6,7 @@
 
 // Include any custom headers you created in your workspace
 #include "MyBugAlgorithm.h"
+#include "Bug1.h"
 
 using namespace amp;
 
@@ -16,7 +17,7 @@ int main(int argc, char** argv) {
     // Use WO1 from Exercise 2
     Problem2D problem = HW2::getWorkspace1();
 
-    // Use WO1 from Exercise 2
+    // Use WO2 from Exercise 2
     /*
     Problem2D problem = HW2::getWorkspace2();
     */
@@ -33,7 +34,8 @@ int main(int argc, char** argv) {
     */
 
     // Declare your algorithm object 
-    MyBugAlgorithm algo;
+    //MyBugAlgorithm algo;
+    Bug1 algo;
     
     // Call your algorithm on the generated problem
     amp::Path2D path = algo.plan(problem);

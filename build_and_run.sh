@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export LD_LIBRARY_PATH=/home/peter/code/AMP-Tools/install/ubuntu22/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/home/carsonk10/AMP-Tools-public/install/ubuntu22/lib:$LD_LIBRARY_PATH
 echo $LD_LIBRARY_PATH
 mkdir -p build && cd build
 cmake ./.. -DAMP_BUILD_LIB=OFF
