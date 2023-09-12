@@ -70,29 +70,134 @@ int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d po
 /// @param q_last 
 /// @param q_next 
 /// @param obstacle 
-/// @return intersection point on obstacle with path
-Eigen::Vector2d closestPointOnObstacle(Eigen::Vector2d q_last, Eigen::Vector2d q_next, amp::Obstacle2D obstacle){
+/// @return A vertice list of all the points to follow in order
+std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eigen::Vector2d q_next, amp::Obstacle2D obstacle){
     // Declare variables
     std::vector<Eigen::Vector2d> v = obstacle.verticesCCW();
     std::vector<Eigen::Vector2d> closestPoint;
+    std::vector<Eigen::Vector2d> results;
     using Line2 = Eigen::Hyperplane<double, 2>;
 
     // Initialize variables
     Line2 bugPath = Line2::Through(q_next, q_last); //Make a line in the path that the bug is going
     double closestDist = INT16_MAX;
-    double closeDex;
+    int closeDex;
+
 
     // Search for intersection points and return the closest one
     for (int j = 0; j < v.size(); j++){
-        Line2 edge = Line2::Through(v[j], v[(j+1)%(v.size()-1)]); //Make a line in the path that the vertices are going
-        closestPoint[j] = bugPath.intersection(edge);
-
-        //Save the closest
+        Line2 edge = Line2::Through(v[j], v[(j+1)%(v.size())]); //Make a line in the path that the vertices are going
+        closestPoint.push_back(bugPath.intersection(edge));
+        //std::cout << j << ": " << ((j+1)%(v.size())) << ", v_j = (" <<  std::endl;
+        
+        //Save the closest point
         if ((closestPoint[j]-q_last).norm() < closestDist){
             closestDist = (closestPoint[j]-q_last).norm();
             closeDex = j;
         }
+        
     }
 
-    return closestPoint[closeDex];
+    results.push_back(closestPoint[closeDex]);
+
+    // Check the object that has been colided with for interecting obstacles and merge to a vector direction matrix for the bug to follow
+        //See if any vertices overlap
+
+
+    //Make a list of all vertices in the correct order starting from closeDex
+    for (int j = 0; j < v.size(); j++){
+        //Check if clostestPoint is also a vertex and don't add it to the list if it is
+        //if (closestPoint[closeDex] == v[(j+closeDex)%(v.size())]){
+        //    continue;
+        //}
+
+        results.push_back(v[(j+1+closeDex)%(v.size())]);
+    }
+
+    // Deubgging: write out all the vertices in the results vector to see if they are in the correct order
+    std::cout << "Object Vertex Direction List: " << std::endl;  
+    for (int j = 0; j < results.size(); j++){
+        std::cout << "(" << results[j](0) << ", " << results[j](1) << ")" << std::endl;
+    }
+
+    //results.push_back(v[closeDex]);
+
+    return results;
+}
+
+/// @brief 
+/// @param obstaclePath 
+/// @param q_goal 
+/// @return shortest path from q_hit to q_leave on boundry of obstacle
+std::vector<Eigen::Vector2d> findShortestPath(std::vector<Eigen::Vector2d> obstaclePath, Eigen::Vector2d q_goal){
+    // Find the distance to the goal of all the vectors contained in the obstacle path and find the shortest one
+    double shortestD;
+    double currentD;
+    int shortestDdex = 0;
+    for (int j = 0; j < obstaclePath.size(); j++){
+        currentD = (obstaclePath[j] - q_goal).squaredNorm();
+        if (j == 0){
+            shortestD = currentD;
+        }else{
+            if (currentD < shortestD){
+                shortestD = currentD;
+                shortestDdex = j;
+            }
+        }
+    }
+
+    // Split the obstacle path into two vectors in half using the shortest distance index as the seperator
+    std::vector<Eigen::Vector2d> obstaclePath1;
+    std::vector<Eigen::Vector2d> obstaclePath2;
+    std::vector<Eigen::Vector2d> shortestObstaclePath;
+    for (int j = 0; j < shortestDdex; j++){
+        obstaclePath1.push_back(obstaclePath[j]);
+    }
+    for (int j = obstaclePath.size()-1; j >= shortestDdex; j--){
+        obstaclePath2.push_back(obstaclePath[j]);
+    }
+
+    if (vertVecDistance(obstaclePath1) < vertVecDistance(obstaclePath2)){
+        shortestObstaclePath = obstaclePath1;
+    }else{
+        shortestObstaclePath = obstaclePath2;
+    }
+
+    // Deubgging: write out all the vertices in the results vector to see if they are in the correct order
+    std::cout << "Obstacle Path Direction List: " << std::endl;  
+    for (int j = 0; j < obstaclePath.size(); j++){
+        std::cout << "(" << obstaclePath[j](0) << ", " << obstaclePath[j](1) << ")" << std::endl;
+    }
+    std::cout << "Shortest Path Direction List: " << std::endl;  
+    for (int j = 0; j < shortestObstaclePath.size(); j++){
+        std::cout << "(" << shortestObstaclePath[j](0) << ", " << shortestObstaclePath[j](1) << ")" << std::endl;
+    }
+
+    return shortestObstaclePath;
+}
+
+// Returns the distance of the path
+double pathDistance(amp::Path2D path){
+    double distance = 0;
+    for (int i = 0; i < path.waypoints.size()-1; i++){
+        //print out the individual distances
+        //std::cout << "The distance between (" << path.waypoints[i](0) << ", " << path.waypoints[i](1) << ") and (" << path.waypoints[i+1](0) << ", " << path.waypoints[i+1](1) << ") is: " << (path.waypoints[i+1] - path.waypoints[i]).norm() << std::endl;
+
+        distance += (path.waypoints[i+1] - path.waypoints[i]).norm();
+    }
+    std::cout << "The path distance is: " << distance << std::endl;
+    return distance;
+}
+
+// Returns the distance of the path
+double vertVecDistance(std::vector<Eigen::Vector2d> path){
+    double distance = 0;
+    for (int i = 0; i < path.size()-1; i++){
+        //print out the individual distances
+        //std::cout << "The distance between (" << path.waypoints[i](0) << ", " << path.waypoints[i](1) << ") and (" << path.waypoints[i+1](0) << ", " << path.waypoints[i+1](1) << ") is: " << (path.waypoints[i+1] - path.waypoints[i]).norm() << std::endl;
+
+        distance += (path[i+1] - path[i]).norm();
+    }
+    std::cout << "The path distance is: " << distance << std::endl;
+    return distance;
 }
