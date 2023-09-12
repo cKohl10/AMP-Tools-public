@@ -21,8 +21,10 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     */
 
    //%%%%%%%%%%%%%%% Hyper Parameters %%%%%%%%%%%%%%%%%%%%
-   double goalReachedError = 0.5;
-   double stepSize = 0.2;
+   double goalReachedError = 0.1;
+   double terminateError = 0.0001;
+   double stepSize = 0.3;
+   double radius = goalReachedError; //sensor radius
 
 
    //%%%%%%%%%%%%%%% Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,10 +36,12 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     Eigen::Vector2d q_goal =  problem.q_goal; //Goal coordinates
     amp::Obstacle2D obstacle; //Obstacle object
 
+    Controller controller; //Controller object
+
     int state = 1; //Determines whate state of the bug algorithm is currently active
     int collisionObjNum; //polygon number of collision, -1 if no collision
     int i = 0; //Obstacle number
-    int DLdex = 1; //Index of the direction list
+    int targDex = 1; //Index of the direction list
     bool qHitGate = false; //Determines if the bug has gone outside of the initial goalReached return zone and will allow for the bug to see qH again
 
 
@@ -91,15 +95,15 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
         directionList = closestPointOnObstacle(q_last, q_next, obstacle);
    
         //Set appropriate positions ;
-        q_next = directionList[0];
         q_target = directionList[1];
-        path.waypoints.push_back(q_next);
-        qH.push_back(q_next);
+        //q_next = controller.step(problem, q_last, directionList, targDex, stepSize);
+        //path.waypoints.push_back(q_next);
+        qH.push_back(directionList[0]);
         std::cout << "qH[" << i << "] = (" << qH[i][0] << ", " << qH[i][1] << ")" << std::endl;
         obstaclePath.push_back(q_next);
 
         //Reset the direction list index
-        DLdex = 0;
+        targDex = 1;
 
         //Set the gate to make the bug not instantly terminate
         qHitGate = true;
@@ -108,7 +112,12 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
         //       *follow bountary recordeding point q^{L_i} with shortest distance to goal
         while(state == 2){
             q_last = path.waypoints.back();
-            q_next = q_last + directionVec(q_last, q_target)*stepSize;
+            q_next = controller.step(problem, q_last, directionList, targDex, stepSize, radius);
+
+            if (goalReached(q_next, q_last, terminateError)){
+                std::cout << "Error: q_next == q_last" << std::endl;
+                return path;
+            }
 
             // Goal reached
             if (goalReached(q_next, q_goal, goalReachedError)){
@@ -124,13 +133,17 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             if (goalReached(q_next, qH[i], goalReachedError) && qHitGate == false){
                 path.waypoints.push_back(q_next);
                 obstaclePath.push_back(q_next);
-                q_next = qH[i];
-                path.waypoints.push_back(q_next);
-                obstaclePath.push_back(q_next);
-                state = 3;
 
+                //Include qH[i] in the path?
+                //q_next = qH[i];
+                //path.waypoints.push_back(q_next);
+                //obstaclePath.push_back(q_next);
+
+
+                state = 3;
                 std::cout << "q_hit reached!" << std::endl;
                 double dist = pathDistance(path);
+                return path;
                 continue;
 
                 //testing
@@ -141,10 +154,10 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             if (goalReached(q_next, q_target, goalReachedError)){
                 path.waypoints.push_back(q_next);
                 obstaclePath.push_back(q_next);
-                q_next = q_target;
+                //q_next = q_target;
 
-                DLdex += 1;
-                q_target = directionList[DLdex%directionList.size()];
+                targDex += 1;
+                q_target = directionList[targDex%directionList.size()];
 
                 std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << ")" << std::endl;  
                 qHitGate = false;
@@ -164,7 +177,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
 
         q_next = shortestObstaclePath[0];
         q_target = shortestObstaclePath[1];
-        DLdex = 1;
+        targDex = 1;
 
         //   *If goal is reached
         //       *exit
@@ -200,12 +213,12 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             }
 
                         // next vertex target reached
-            if (goalReached(q_next, q_target, goalReachedError) && DLdex < shortestObstaclePath.size()-1){
+            if (goalReached(q_next, q_target, goalReachedError) && targDex < shortestObstaclePath.size()-1){
                 path.waypoints.push_back(q_next);
                 q_next = q_target;
 
-                DLdex += 1;
-                q_target = shortestObstaclePath[DLdex];
+                targDex += 1;
+                q_target = shortestObstaclePath[targDex];
 
                 std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << ")" << std::endl;  
             } else{

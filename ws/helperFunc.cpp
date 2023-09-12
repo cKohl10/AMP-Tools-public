@@ -58,7 +58,7 @@ int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d po
     
 
         if (collision){
-            std::cout << "Collision!" << std::endl;
+            //std::cout << "Collision!" << std::endl;
             return counter;
         }
         counter += 1;
@@ -124,6 +124,117 @@ std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eige
 
     return results;
 }
+
+/// @brief Find the intersection point between all edges and return the closest one
+/// @return a new point that maintains a distance from the boundry of the obstacle
+Eigen::Vector2d adjustOnBoundry(Eigen::Vector2d q_last, Eigen::Vector2d q_next, amp::Obstacle2D obstacle, double boundDist, double stepSize){
+    // Declare variables
+    std::vector<Eigen::Vector2d> v = obstacle.verticesCCW();
+    std::vector<Eigen::Vector2d> closestPoint;
+    std::vector<Eigen::Vector2d> results;
+    using Line2 = Eigen::Hyperplane<double, 2>;
+
+    // Initialize variables
+    Line2 bugPath = Line2::Through(q_next, q_last); //Make a line in the path that the bug is going
+    double closestDist = INT16_MAX;
+    int closeDex;
+
+
+    // Search for intersection points and return the closest one
+    for (int j = 0; j < v.size(); j++){
+        Line2 edge = Line2::Through(v[j], v[(j+1)%(v.size())]); //Make a line in the path that the vertices are going
+        closestPoint.push_back(bugPath.intersection(edge));
+        //std::cout << j << ": " << ((j+1)%(v.size())) << ", v_j = (" <<  std::endl;
+        
+        //Save the closest point
+        if ((closestPoint[j]-q_last).norm() < closestDist){
+            closestDist = (closestPoint[j]-q_last).norm();
+            closeDex = j;
+        }
+        
+    }
+
+    //results.push_back(v[closeDex]);
+    //Define the normal vector from the edge intersected with
+    Line2 edge = Line2::Through(v[closeDex], v[(closeDex+1)%(v.size())]); //Make a line in the path that the vertices are going
+    Eigen::Vector2d normal = edge.normal();
+
+    q_next = closestPoint[closeDex] - boundDist*normal.normalized() + boundDist*(v[closeDex], v[(closeDex+1)%(v.size())]).normalized();
+
+    return q_next;
+}
+
+
+/// @brief This function with create a circle object with the bug at its center. It will have a specified radius and will be used to detect any interselctions with obstacle boundries
+/// @param q_last 
+/// @param q_next 
+/// @param v :Set of vertices in an object
+/// @param stepSize :Step size of the bug along intersection direcion
+/// @param radius 
+/// @return q_next
+Eigen::Vector2d radiusAdjust(Eigen::Vector2d q_last, Eigen::Vector2d q_next, std::vector<Eigen::Vector2d> v, int targDex, double stepSize, double radius){
+    
+    Eigen::Hyperplane<double, 2> circle(q_next, radius);
+    Eigen::Vector2d q_nextNew = q_next;
+
+    //Determine if any vertices are in radius
+    std::vector<int> vInRadiusDex;
+    for (int j = 0; j < v.size(); j++){
+        if (circle.signedDistance(v[j]) <= 0){
+            vInRadiusDex.push_back(j);
+        }
+    }
+
+    std::vector<Eigen::Vector2d> intersectionPoints;
+    //Case 1: There are no vertices in the radius
+    
+    if (vInRadiusDex.size() == 0){
+        //Make a parameterized line starting from the target vertice and find intersection points
+        
+        Eigen::ParametrizedLine<double, 2> line(v[targDex], v[(targDex-1)%v.size()] - v[targDex]);
+        double discriminant = pow(line.direction().dot(circle.normal()), 2) - (line.direction().squaredNorm() * (circle.normal().squaredNorm() - pow(circle.offset(), 2)));
+        if (discriminant < 0) {
+            //std::cout << "The line does not intersect the circle." << std::endl;
+            return q_nextNew;
+        }
+
+        // This line intersects with the circle
+        double t1 = (-line.direction().dot(circle.normal()) + sqrt(discriminant)) / line.direction().squaredNorm();
+        double t2 = (-line.direction().dot(circle.normal()) - sqrt(discriminant)) / line.direction().squaredNorm();
+
+        intersectionPoints.push_back(line.pointAt(t1));
+        intersectionPoints.push_back(line.pointAt(t2));
+
+        // Go in the direction of the intersection point that is closest to the target vertice
+        Eigen::ParametrizedLine<double, 2> line2(intersectionPoints[0], intersectionPoints[1] - intersectionPoints[0]);
+        q_nextNew = q_next + line2.direction().normalized()*stepSize;
+
+    } else if (vInRadiusDex.size() == 1){
+        //Case 2: There is one vertices in the radius. Make a parameterized line staring from this vertex index in the target list to its previous vertex index in the target list and a line to the next vertex index in the target list
+        //Make a parameterized line starting from the vertice inside to its last vertice and find intersection points
+        
+        Eigen::ParametrizedLine<double, 2> line(v[vInRadiusDex[0]], v[(vInRadiusDex[0]-1)%v.size()] - v[vInRadiusDex[0]]);
+        double discriminant = pow(line.direction().dot(circle.normal()), 2) - (line.direction().squaredNorm() * (circle.normal().squaredNorm() - pow(circle.offset(), 2)));
+        if (discriminant < 0) {
+            //std::cout << "The line does not intersect the circle." << std::endl;
+            return q_nextNew;
+        }
+
+        // This line intersects with the circle
+        double t1 = (-line.direction().dot(circle.normal()) + sqrt(discriminant)) / line.direction().squaredNorm();
+        double t2 = (-line.direction().dot(circle.normal()) - sqrt(discriminant)) / line.direction().squaredNorm();
+
+        intersectionPoints.push_back(line.pointAt(t1));
+        intersectionPoints.push_back(line.pointAt(t2));
+
+        // Go in the direction of the intersection point that is closest to the target vertice
+        Eigen::ParametrizedLine<double, 2> line2(intersectionPoints[0], intersectionPoints[1] - intersectionPoints[0]);
+        q_nextNew = q_next + line2.direction().normalized()*stepSize;
+    }
+    
+    return q_nextNew;
+}
+
 
 /// @brief 
 /// @param obstaclePath 
