@@ -10,9 +10,43 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     amp::Path2D path;
 
     // Handle overlapping polygons
+    //print status statement
+    
+    std::cout << std::endl << "Expanding polygons..." << std::endl;
     amp::Problem2D problemEX = expandPolygons(problem, 0.01);
-    //PolyGraph polyGraph(problemEX);
-    //polyGraph.sort();
+    PolyGraph polyGraph(problemEX);
+
+    std::cout << std::endl << "Sorting polygons into graph..." << std::endl;
+    polyGraph.sort();
+
+    std::cout << std::endl << "Seperating by overlapping vertices..." << std::endl;
+    polyGraph.findVertices();
+
+    std::cout << std::endl << "Merging overlapping polygons..." << std::endl;
+    polyGraph.commonContour();
+
+    std::cout << std::endl << "Creating new workspace" << std::endl;
+    //Clear all of problemEX's obstacles
+    problemEX.obstacles.clear();
+
+    //Add the new obstacles to problemEX
+    for (int i = 0; i < polyGraph.vertices.size(); i++){
+
+        //print obstacle number
+        std::cout << "Obstacle " << i << " vertices: " << std::endl;
+
+
+        amp::Obstacle2D newObstacle(polyGraph.newObstacleVerticesSet[i]);
+        problemEX.obstacles.push_back(newObstacle);
+
+        //print vertices
+        std::vector<Eigen::Vector2d> vertices = problemEX.obstacles[i].verticesCCW();
+        for (int j = 0; j < vertices.size(); j++){
+            std::cout << "(" <<  vertices[j][0] << ", " << vertices[j][1] << ")" << std::endl;
+        }
+    }
+
+
     //path.waypoints.push_back(problemEX.q_init);
     //path.waypoints.push_back(Eigen::Vector2d(1.0, 10.0));
     //path.waypoints.push_back(Eigen::Vector2d(3.0, 9.0));
@@ -47,6 +81,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
 
 
    //%%%%%%%%%%%%%%% Algorithm Begins Here %%%%%%%%%%%%%%%
+   std::cout << std::endl << "Starting Bug1 Algorithm..." << std::endl;
    // Let q^{L_0} = q_{start}; i = 1
     //qL.push_back(problemEX.q_init);
     path.waypoints.push_back(problemEX.q_init);
@@ -137,6 +172,13 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
 
                 std::cout << "q_hit reached!" << std::endl;
                 double dist = pathDistance(path);
+
+                //return path if qH is the same as the last qL
+                if (qL.size() > 0){
+                    if (qH[i] == qL.back()){
+                        return path;
+                    }
+                }
                 continue;
 
                 //testing
@@ -180,7 +222,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
         while(state == 3){
             //   *Go to q^{L_i}
             q_last = path.waypoints.back();
-            std::cout << "q_last = (" << q_last[0] << ", " << q_last[1] << ")" << std::endl;
+            //std::cout << "q_last = (" << q_last[0] << ", " << q_last[1] << ")" << std::endl;
 
             q_next = shortestObstaclePath[DLdex];
 

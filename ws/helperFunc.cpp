@@ -114,10 +114,12 @@ std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eige
     }
 
     // Deubgging: write out all the vertices in the results vector to see if they are in the correct order
+    /*
     std::cout << "Object Vertex Direction List: " << std::endl;  
     for (int j = 0; j < results.size(); j++){
         std::cout << "(" << results[j](0) << ", " << results[j](1) << ")" << std::endl;
     }
+    */
 
     //results.push_back(v[closeDex]);
 
@@ -163,14 +165,16 @@ std::vector<Eigen::Vector2d> findShortestPath(std::vector<Eigen::Vector2d> obsta
     }
 
     // Deubgging: write out all the vertices in the results vector to see if they are in the correct order
-    std::cout << "Obstacle Path Direction List: " << std::endl;  
+    /*
+    std::cout << "Obstacle Path Direction List Found: " << std::endl;  
     for (int j = 0; j < obstaclePath.size(); j++){
         std::cout << "(" << obstaclePath[j](0) << ", " << obstaclePath[j](1) << ")" << std::endl;
     }
-    std::cout << "Shortest Path Direction List: " << std::endl;  
+    std::cout << "Shortest Path Direction List Found: " << std::endl;  
     for (int j = 0; j < shortestObstaclePath.size(); j++){
         std::cout << "(" << shortestObstaclePath[j](0) << ", " << shortestObstaclePath[j](1) << ")" << std::endl;
     }
+    */
 
     return shortestObstaclePath;
 }
@@ -225,7 +229,7 @@ amp::Problem2D expandPolygons(amp::Problem2D problem, double expansionFactor){
 
         //Scale the vertices from the center point
         for (int i = 0; i < o.verticesCCW().size(); i++){
-            o.verticesCCW()[i] = o.verticesCCW()[i] + (o.verticesCCW()[i] - center)*expansionFactor;
+            o.verticesCCW()[i] = o.verticesCCW()[i] + (o.verticesCCW()[i] - center).normalized()*expansionFactor;
         }
 
         //Save the expanded vertices
@@ -243,16 +247,16 @@ amp::Problem2D expandPolygons(amp::Problem2D problem, double expansionFactor){
 bool polygonOverlap(amp::Obstacle2D obstacle1, amp::Obstacle2D obstacle2){
     bool collision = false; //collision checker
     
-    std::vector<amp::Obstacle2D> obstacles; //List of both obstacles
-    obstacles.push_back(obstacle1);
-    obstacles.push_back(obstacle2);
+    std::vector<amp::Obstacle2D> obstaclesVec; //List of both obstacles
+    obstaclesVec.push_back(obstacle1);
+    obstaclesVec.push_back(obstacle2);
 
     // Access every obstacle
-    for (int i = 0; i < obstacles.size(); i++){
+    for (int k = 0; k < obstaclesVec.size(); k++){
 
         //Set the vertices to test against as v and the vertices to test as v2
-        std::vector<Eigen::Vector2d> v = obstacles[i%1].verticesCCW();
-        std::vector<Eigen::Vector2d> v2 = obstacles[(i+1)%1].verticesCCW();
+        std::vector<Eigen::Vector2d> v = obstaclesVec[k%2].verticesCCW();
+        std::vector<Eigen::Vector2d> v2 = obstaclesVec[(k+1)%2].verticesCCW();
             
         for (int i = 0; i < v2.size(); i++){
             
@@ -266,14 +270,27 @@ bool polygonOverlap(amp::Obstacle2D obstacle1, amp::Obstacle2D obstacle2){
 
                 //Checks every normal and only collides if direction vector dot with vertice is all <= 0
                 collision = collision && (normal.dot(position - v[j]) <= 0); 
+
+                //print out poistion vector and normal vector
+                //std::cout << "The dot product of the normal vector (" << normal[0] << ", " << normal[1] << ") and the arbitrary vector (" << position[0]-v[j](0) << ", " << position[1]-v[j](1) << ") is " << normal.dot(position- v[j]) << std::endl;
             }
 
             // finsh the loop
             if (collision){
-                std::cout << "Object overlap detected!" << std::endl;
+                //std::cout << "Object overlap detected!" << std::endl;
                 return true;
             }
         }
     }
     return false;
+}
+
+/// @brief Takes in two parameterized lines and returns the angle between them
+/// @param line1 
+/// @param line2 
+/// @return angle between 0 to pi
+double angleBetweenLines(const Eigen::ParametrizedLine<double, 2>& line1, const Eigen::ParametrizedLine<double, 2>& line2) {
+    double dotProduct = line1.direction().dot(line2.direction());
+    double angle = std::acos(dotProduct);
+    return angle;
 }
