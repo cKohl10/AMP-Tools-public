@@ -21,9 +21,10 @@ bool goalReached(Eigen::Vector2d currentPoint, Eigen::Vector2d q_goal, double go
 /// @param obstacles 
 /// @param position 
 /// @return -1 for no collision, or the object number in the list that was collided with
-int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position){
+std::vector<int> collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position){
     bool collision = false; //collision checker
     int counter = 0; //polygon counter to tell which object has been collided with
+    std::vector<int> collisionDexs; //List of all the objects that have been collided with
 
     // Access every obstacle
     for (amp::Obstacle2D o : obstacles){
@@ -49,7 +50,7 @@ int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d po
                 //std::cout << "For edge: (" << v[j+1](0) << ", " << v[j+1](1) << ") and (" << v[j](0) << ", " << v[j](1) << ")" << std::endl;
                 //std::cout << "The dot product of the normal vector (" << normal[0] << ", " << normal[1] << ") and the arbitrary vector (" << position[0]-v[j+1](0) << ", " << position[1]-v[j+1](1) << ") is " << normal.dot(position- v[j+1]) << std::endl;
 
-                collision = collision && (normal.dot(position - v[j+1]) <= 0); 
+                collision = collision && (normal.dot(position - v[j+1]) < 0); 
             }
         }
 
@@ -57,12 +58,17 @@ int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d po
     
 
         if (collision){
-            std::cout << "Collision!" << std::endl;
-            return counter;
+            //std::cout << "Collision!" << std::endl;
+            counter;
+            collisionDexs.push_back(counter);
         }
         counter += 1;
     }
-    return -1;
+
+    if (collisionDexs.size() == 0){
+        collisionDexs.push_back(-1);
+    }
+    return collisionDexs;
 }
 
 /// @brief Find the intersection point between all edges and return the closest one
@@ -97,7 +103,7 @@ std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eige
         
     }
 
-    results.push_back(closestPoint[closeDex]);
+    results.push_back(closestPoint[closeDex]); //qHit
 
     // Check the object that has been colided with for interecting obstacles and merge to a vector direction matrix for the bug to follow
         //See if any vertices overlap
@@ -110,18 +116,13 @@ std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eige
         //    continue;
         //}
 
-        results.push_back(v[(j+1+closeDex)%(v.size())]);
+        results.push_back(v[(j+1+closeDex)%(v.size())]); //All vertices in counter clockwise order
     }
 
-    // Deubgging: write out all the vertices in the results vector to see if they are in the correct order
-    /*
-    std::cout << "Object Vertex Direction List: " << std::endl;  
-    for (int j = 0; j < results.size(); j++){
-        std::cout << "(" << results[j](0) << ", " << results[j](1) << ")" << std::endl;
-    }
-    */
+    results.push_back(closestPoint[closeDex]); //qHit again
 
-    //results.push_back(v[closeDex]);
+    ////////////////// NOTE //////////////////////
+    // The output can be reversed to change directions 
 
     return results;
 }

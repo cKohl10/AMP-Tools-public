@@ -10,7 +10,7 @@ bool goalReached(Eigen::Vector2d currentPoint, Eigen::Vector2d q_goal, double go
 double pathDistance(amp::Path2D path);
 
 // Enviroment Interaction Functions
-int collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position);
+std::vector<int> collisionDetected(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position);
 std::vector<Eigen::Vector2d> closestPointOnObstacle(Eigen::Vector2d q_last, Eigen::Vector2d q_next, amp::Obstacle2D obstacle);
 double vertVecDistance(std::vector<Eigen::Vector2d> path);
 std::vector<Eigen::Vector2d> findShortestPath(std::vector<Eigen::Vector2d> obstaclePath, Eigen::Vector2d q_goal);

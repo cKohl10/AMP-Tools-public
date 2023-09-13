@@ -11,16 +11,29 @@ class Controller{
         Controller(amp::Problem2D p);
         Eigen::Vector2d step(Eigen::Vector2d q_last, double stepSize);
 
+        //Target object and queue
         void changeFollowTarget(int obstaceleIndex);
         void printtargetQueue();
         void setFollowTarget(int obstacleIndex);
         void clearTargetQueue();
+        void nextTarget();
         Eigen::Vector2d getCurrentTarget();
+        std::vector<Eigen::Vector2d> getTargetQueue();
+        int getCurrentFollowObstacle();
 
+        //Path tracking
+        void logPointInObstaclePath(Eigen::Vector2d q);
+        std::vector<Eigen::Vector2d> getObstaclePathTaken();
+
+        //Reset for leaving the obstacle
+        void clearBug();
+
+        double distTraveled;
 
     private:
         amp::Problem2D problem;
         std::vector<Eigen::Vector2d> targetQueue;
+        std::vector<Eigen::Vector2d> obstaclePathTaken;
         int targetObstacleIndex;
 
 };
