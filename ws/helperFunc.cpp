@@ -1,5 +1,4 @@
 #include "helperFunc.h"
-#include "Eigen/Geometry"
 
 
 /// @return the normalized distance between two 2D vector points
@@ -200,4 +199,81 @@ double vertVecDistance(std::vector<Eigen::Vector2d> path){
     }
     std::cout << "The path distance is: " << distance << std::endl;
     return distance;
+}
+
+//Finds the center point for each polygon in the workspace and scales vertices from the center
+amp::Problem2D expandPolygons(amp::Problem2D problem, double expansionFactor){
+    amp::Problem2D newProblem = problem; //Make a copy of the problem to edit
+    Eigen::Vector2d center; //Center point of the polygon
+    int counter = 0; //Polygon counter
+
+    //Access every obstacle
+    for (amp::Obstacle2D o : problem.obstacles){
+
+        center = Eigen::Vector2d::Zero(); //Reset the center point
+
+        //Find the center point of the polygon
+        for (Eigen::Vector2d v : o.verticesCCW()){
+            center += v;
+        }
+
+        //Average the center point
+        center /= o.verticesCCW().size();
+
+        //Print the center point location
+        std::cout << "Center point: (" << center(0) << ", " << center(1) << ")" << std::endl;
+
+        //Scale the vertices from the center point
+        for (int i = 0; i < o.verticesCCW().size(); i++){
+            o.verticesCCW()[i] = o.verticesCCW()[i] + (o.verticesCCW()[i] - center)*expansionFactor;
+        }
+
+        //Save the expanded vertices
+        newProblem.obstacles[counter] = o;
+        counter++;
+    }
+
+    return newProblem;
+}
+
+/// @brief This builds a union of primitives for each obstacle and compares the location of each vertice for overlaps 
+/// @param obstacles 
+/// @param position 
+/// @return false for no collision, or the object number in the list that was collided with
+bool polygonOverlap(amp::Obstacle2D obstacle1, amp::Obstacle2D obstacle2){
+    bool collision = false; //collision checker
+    
+    std::vector<amp::Obstacle2D> obstacles; //List of both obstacles
+    obstacles.push_back(obstacle1);
+    obstacles.push_back(obstacle2);
+
+    // Access every obstacle
+    for (int i = 0; i < obstacles.size(); i++){
+
+        //Set the vertices to test against as v and the vertices to test as v2
+        std::vector<Eigen::Vector2d> v = obstacles[i%1].verticesCCW();
+        std::vector<Eigen::Vector2d> v2 = obstacles[(i+1)%1].verticesCCW();
+            
+        for (int i = 0; i < v2.size(); i++){
+            
+            collision = true;
+            Eigen::Vector2d position = v2[i]; //This is the vertice that will be tested for collision next
+
+            //Make a primitive for each obstacle
+            for (int j = 0; j < v.size(); j++){
+                Eigen::ParametrizedLine<double, 2> line(v[j], v[(j+1)%v.size()] - v[j]);
+                Eigen::Vector2d normal(line.direction()[1], -line.direction()[0]);
+
+                //Checks every normal and only collides if direction vector dot with vertice is all <= 0
+                collision = collision && (normal.dot(position - v[j]) <= 0); 
+            }
+
+            // finsh the loop
+            if (collision){
+                std::cout << "Object overlap detected!" << std::endl;
+                return true;
+            }
+        }
+    }
+    return false;
 }

@@ -7,6 +7,8 @@
 // Include any custom headers you created in your workspace
 #include "MyBugAlgorithm.h"
 #include "Bug1.h"
+#include "helperFunc.h"
+#include "PolyGraph.h"
 
 using namespace amp;
 
@@ -32,6 +34,7 @@ int main(int argc, char** argv) {
     Randomly generate the environment;
     Problem2D problem = EnvironmentTools::generateRandom(spec); // Random environment
     */
+    //problem = fixOverlappingPolygons(problem);
 
     // Declare your algorithm object 
     //MyBugAlgorithm algo;

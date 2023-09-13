@@ -8,21 +8,26 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
 
     // Your algorithm solves the problem and generates a path. Here is a hard-coded to path for now...
     amp::Path2D path;
-    //path.waypoints.push_back(problem.q_init);
+
+    // Handle overlapping polygons
+    amp::Problem2D problemEX = expandPolygons(problem, 0.01);
+    //PolyGraph polyGraph(problemEX);
+    //polyGraph.sort();
+    //path.waypoints.push_back(problemEX.q_init);
     //path.waypoints.push_back(Eigen::Vector2d(1.0, 10.0));
     //path.waypoints.push_back(Eigen::Vector2d(3.0, 9.0));
-    //path.waypoints.push_back(problem.q_goal);
+    //path.waypoints.push_back(problemEX.q_goal);
 
     // Print all obstacles and their verticies
     /*
-    for (amp::Obstacle2D o : problem.obstacles){
+    for (amp::Obstacle2D o : problemEX.obstacles){
         o.print();
     }
     */
 
    //%%%%%%%%%%%%%%% Hyper Parameters %%%%%%%%%%%%%%%%%%%%
    double goalReachedError = 0.5;
-   double stepSize = 0.2;
+   double stepSize = 0.1;
 
 
    //%%%%%%%%%%%%%%% Variables %%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +36,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     Eigen::Vector2d q_last; //Last movement point
     Eigen::Vector2d q_next; //Next step in path
     Eigen::Vector2d q_target; //Direction of bug when no going to goal
-    Eigen::Vector2d q_goal =  problem.q_goal; //Goal coordinates
+    Eigen::Vector2d q_goal =  problemEX.q_goal; //Goal coordinates
     amp::Obstacle2D obstacle; //Obstacle object
 
     int state = 1; //Determines whate state of the bug algorithm is currently active
@@ -43,12 +48,12 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
 
    //%%%%%%%%%%%%%%% Algorithm Begins Here %%%%%%%%%%%%%%%
    // Let q^{L_0} = q_{start}; i = 1
-    //qL.push_back(problem.q_init);
-    path.waypoints.push_back(problem.q_init);
+    //qL.push_back(problemEX.q_init);
+    path.waypoints.push_back(problemEX.q_init);
 
     /////////TESTING////////////
     //path.waypoints.push_back(Eigen::Vector2d(1.5, 2.0));
-    //collisionDetected(problem.obstacles, Eigen::Vector2d(1.5, 2.0));
+    //collisionDetected(problemEX.obstacles, Eigen::Vector2d(1.5, 2.0));
     /////////////////////////////
 
    // *Repeat:
@@ -60,6 +65,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
         while(state == 1){
             q_last = path.waypoints.back();
             q_next = q_last + directionVec(q_last, q_goal)*stepSize;
+            
 
             // *If goal is reached:
             //    *exit
@@ -71,7 +77,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             }
 
             // *If obstacle encountered
-            collisionObjNum = collisionDetected(problem.obstacles, q_next);
+            collisionObjNum = collisionDetected(problemEX.obstacles, q_next);
             if (collisionObjNum > -1){
                 state = 2;
             }else{
@@ -81,7 +87,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             
         }
         // After the bug has found an obstacle, it will align itself with the boundry of the obstacle, then move towards the next closest point in the vertice list
-        obstacle = problem.obstacles[collisionObjNum];
+        obstacle = problemEX.obstacles[collisionObjNum];
         //Set a vector containing all the points on the obstacle path
         std::vector<Eigen::Vector2d> obstaclePath;
         std::vector<Eigen::Vector2d> directionList; //Directions for the bug to travel once it is bounding an obstacle
@@ -147,7 +153,10 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                 q_target = directionList[DLdex%directionList.size()];
 
                 std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << ")" << std::endl;  
-                qHitGate = false;
+                
+                if (DLdex == directionList.size()-1){
+                    qHitGate = false;
+                }
             }
 
             path.waypoints.push_back(q_next);
@@ -171,7 +180,9 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
         while(state == 3){
             //   *Go to q^{L_i}
             q_last = path.waypoints.back();
-            q_next = q_last + directionVec(q_last, q_target)*stepSize;
+            std::cout << "q_last = (" << q_last[0] << ", " << q_last[1] << ")" << std::endl;
+
+            q_next = shortestObstaclePath[DLdex];
 
 
             //   *If move toward q_{goal} moves into obstacle
@@ -199,23 +210,26 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                 //return path;
             }
 
-                        // next vertex target reached
+            /*            // next vertex target reached
             if (goalReached(q_next, q_target, goalReachedError) && DLdex < shortestObstaclePath.size()-1){
                 path.waypoints.push_back(q_next);
                 q_next = q_target;
 
-                DLdex += 1;
+                
                 q_target = shortestObstaclePath[DLdex];
 
                 std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << ")" << std::endl;  
             } else{
                 std::cout << "Error: Incorrectly terminated state 3" << std::endl;
                 return path;
-            }
+            }*/
 
             //   *Else
             //       *i=i+1
             //       *continue  
+
+            DLdex += 1;
+            path.waypoints.push_back(q_next);
             
         }
 

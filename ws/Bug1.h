@@ -3,6 +3,7 @@
 #include "AMPCore.h"
 #include "hw/HW2.h"
 #include "helperFunc.h"
+#include "PolyGraph.h"
 
 /// @brief Declare your bug algorithm class here. Note this class derives the bug algorithm class declared in HW2.h
 class Bug1 : public amp::BugAlgorithm {
