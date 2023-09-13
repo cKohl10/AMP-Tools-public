@@ -16,6 +16,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     amp::Problem2D problemEX = expandPolygons(problem, 0.01);
     PolyGraph polyGraph(problemEX);
 
+    /*
     std::cout << std::endl << "Sorting polygons into graph..." << std::endl;
     polyGraph.sort();
 
@@ -45,6 +46,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
             std::cout << "(" <<  vertices[j][0] << ", " << vertices[j][1] << ")" << std::endl;
         }
     }
+    */
 
 
     //path.waypoints.push_back(problemEX.q_init);
@@ -72,6 +74,8 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     Eigen::Vector2d q_target; //Direction of bug when no going to goal
     Eigen::Vector2d q_goal =  problemEX.q_goal; //Goal coordinates
     amp::Obstacle2D obstacle; //Obstacle object
+
+    Controller controller(problemEX);
 
     int state = 1; //Determines whate state of the bug algorithm is currently active
     int collisionObjNum; //polygon number of collision, -1 if no collision
