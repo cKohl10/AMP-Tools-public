@@ -1,10 +1,10 @@
-#include "Bug1.h"
+#include "Bug2.h"
 
 //Eigen::Vector2d directionVec(Eigen::Vector2d fromPoint, Eigen::Vector2d toPoint);
 //bool goalReached(Eigen::Vector2d currentPoint, Eigen::Vector2d q_goal, double goalReachedError);
 
 // Implement your methods in the `.cpp` file, for example:
-amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
+amp::Path2D Bug2::plan(const amp::Problem2D& problem) const{
 
     // Your algorithm solves the problem and generates a path. Here is a hard-coded to path for now...
     amp::Path2D path;

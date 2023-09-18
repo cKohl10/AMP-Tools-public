@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     /*    Randomly generate the problem     */ 
 
     // Use WO1 from Exercise 2
-    //Problem2D problem = HW2::getWorkspace2();
+    Problem2D problem = HW2::getWorkspace2();
 
     // Use WO2 from Exercise 2
     /*
@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     */
 
     // Make a random environment spec, edit properties about it such as the number of obstacles
-    
+    /*
     Random2DEnvironmentSpecification spec;
     spec.max_obstacle_region_radius = 100.0;
     spec.n_obstacles = 5;
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     spec.d_sep = 0.1;
     //Randomly generate the environment;
     Problem2D problem = EnvironmentTools::generateRandom(spec); // Random environment
-    
+    */
     
     //problem = fixOverlappingPolygons(problem);
 
