@@ -13,7 +13,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     //print status statement
     
     std::cout << std::endl << "Expanding polygons..." << std::endl;
-    amp::Problem2D problemEX = expandPolygons(problem, 1);
+    amp::Problem2D problemEX = expandPolygons(problem, 0.01); //Double defines expansion size
     PolyGraph polyGraph(problemEX);
 
     /*
@@ -62,8 +62,9 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
     */
 
    //%%%%%%%%%%%%%%% Hyper Parameters %%%%%%%%%%%%%%%%%%%%
-    double stepSize = 0.05;
-    double goalReachedError = stepSize;
+   double initialDist = (problem.q_goal - problem.q_init).norm();
+    double stepSize = initialDist/1000;
+    double goalReachedError = stepSize/2;
     double maxDist = 1000;
 
 
@@ -114,6 +115,8 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                 path.waypoints.push_back(q_next);
                 path.waypoints.push_back(q_goal);
                 std::cout << "Goal Reached!" << std::endl;
+                //print out the distance traveled
+                std::cout << "Distance traveled: " << pathDistance(path) << std::endl;
                 return path;
             }
 
@@ -189,10 +192,13 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                 //Reach goal case
                 if(q_target == q_goal){
                     std::cout << "Goal Reached!" << std::endl;
+                    //print out the distance traveled
+                    std::cout << "Distance traveled: " << pathDistance(path) << std::endl;
                     return path;
                 }
 
                 path.waypoints.push_back(q_next);
+                int currentFollowObstacle = controller.getCurrentFollowObstacle();
                 q_next = controller.step(q_last, (q_target-q_last).norm());
 
                 //Check target list
@@ -208,7 +214,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                         }
                     }
                     continue;
-                } else{
+                } else if(controller.getCurrentFollowObstacle() == currentFollowObstacle){
                     controller.nextTarget();
                     q_target = controller.getCurrentTarget();
                 }
@@ -273,6 +279,9 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem) const{
                 path.waypoints.push_back(q_next);
                 path.waypoints.push_back(q_goal);
                 std::cout << "Goal Reached!" << std::endl;
+
+                //print out the distance traveled
+                std::cout << "Distance traveled: " << pathDistance(path) << std::endl;
                 return path;
             }
 
