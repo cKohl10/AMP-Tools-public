@@ -1,10 +1,11 @@
-#include "Bug1.h"
+#include "Bug2.h"
+#include "Eigen/Geometry"
 
 //Eigen::Vector2d directionVec(Eigen::Vector2d fromPoint, Eigen::Vector2d toPoint);
 //bool goalReached(Eigen::Vector2d currentPoint, Eigen::Vector2d q_goal, double goalReachedError);
 
 // Implement your methods in the `.cpp` file, for example:
-amp::Path2D Bug1::plan(const amp::Problem2D& problem){
+amp::Path2D Bug2::plan(const amp::Problem2D& problem){
 
     // Your algorithm solves the problem and generates a path. Here is a hard-coded to path for now...
     amp::Path2D path;
@@ -13,7 +14,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
     //print status statement
     
     std::cout << std::endl << "Expanding polygons..." << std::endl;
-    amp::Problem2D problemEX = expandPolygons(problem, 0.01); //Double defines expansion size
+    amp::Problem2D problemEX = expandPolygons(problem, 0.0001); //Double defines expansion size
     PolyGraph polyGraph(problemEX);
 
     /*
@@ -63,7 +64,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
 
    //%%%%%%%%%%%%%%% Hyper Parameters %%%%%%%%%%%%%%%%%%%%
    double initialDist = (problem.q_goal - problem.q_init).norm();
-    double stepSize = initialDist/1000;
+    double stepSize = initialDist/5000;
     double goalReachedError = stepSize/2;
     double maxDist = 1000;
 
@@ -74,8 +75,15 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
     Eigen::Vector2d q_last; //Last movement point
     Eigen::Vector2d q_next; //Next step in path
     Eigen::Vector2d q_target; //Direction of bug when no going to goal
-    Eigen::Vector2d q_goal =  problemEX.q_goal; //Goal coordinates
+    Eigen::Vector2d q_goal = problemEX.q_goal; //Goal coordinates
     amp::Obstacle2D obstacle; //Obstacle object
+
+    //Defining the M-Line
+    using Line2PL = Eigen::ParametrizedLine<double, 2>;
+    using Line2HP = Eigen::Hyperplane<double, 2>;
+
+    Line2PL MLinePL = Line2PL(problemEX.q_init, (q_goal - problemEX.q_init).normalized());
+    Line2HP MLineHP = Line2HP::Through(q_goal, problemEX.q_init);
 
     Controller controller(problemEX);
 
@@ -83,29 +91,18 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
     int collisionObjNum; //polygon number of collision, -1 if no collision
     int i = 0; //Obstacle number
     int DLdex = 1; //Index of the direction list
-    bool qHitGate = false; //Determines if the bug has gone outside of the initial goalReached return zone and will allow for the bug to see qH again
+    //bool qHitGate = false; //Determines if the bug has gone outside of the initial goalReached return zone and will allow for the bug to see qH again
 
 
    //%%%%%%%%%%%%%%% Algorithm Begins Here %%%%%%%%%%%%%%%
-   std::cout << std::endl << "Starting Bug1 Algorithm..." << std::endl;
+   std::cout << std::endl << "Starting Bug 2 Algorithm..." << std::endl;
    // Let q^{L_0} = q_{start}; i = 1
     //qL.push_back(problemEX.q_init);
     path.waypoints.push_back(problemEX.q_init);
 
-    
-
-    /////////TESTING////////////
-    //path.waypoints.push_back(Eigen::Vector2d(1.5, 2.0));
-    //collisionDetected(problemEX.obstacles, Eigen::Vector2d(1.5, 2.0));
-    /////////////////////////////
-
-   // *Repeat:
-   
-   
     while (true){
-    
-        //   *Repeat until goal is reached or obstacle encountered at q^{H_i}:
-        //       *from q^{L_{i-1}} move toward q_{goal}  
+
+        //State 1: Move to goal on M-Line
         while(state == 1){
             q_last = path.waypoints.back();
             q_next = controller.step(q_last, stepSize);
@@ -126,67 +123,93 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
             if (controller.getCurrentFollowObstacle() > -1){
                 state = 2;
             }else{
+                // *If no obstacle encountered, add to path
                 path.waypoints.push_back(q_next);
             }
-            //std::cout << (q_goal - q_next).squaredNorm() << std::endl;
 
+            // *If max distance traveled,  exit
             if (controller.distTraveled > maxDist){
                 return path;
             }
             
         }
 
-        //path.waypoints.push_back(q_last);
-        qH.push_back(controller.getTargetQueue()[0]);
+        //Log the next hit point
+        if (qH.size() == i+1){
+            qH[i] = controller.getTargetQueue()[0];
+        } else{
+            qH.push_back(controller.getTargetQueue()[0]);
+        }
         int qH_obstacleIndex = controller.getCurrentFollowObstacle();
-        std::cout << "qH[" << i << "] = (" << qH[i][0] << ", " << qH[i][1] << ")" << std::endl;
+        //std::cout << "qH[" << i << "] = (" << qH[i][0] << ", " << qH[i][1] << ")" << std::endl;
         path.waypoints.push_back(q_next);
+        //controller.printtargetQueue();
 
-        //Set the gate to make the bug not instantly terminate
-        qHitGate = true;
-
-        //   *Repeat until q_{goal} is reached or q^{H_i} is re-encountered
-        //       *follow bountary recordeding point q^{L_i} with shortest distance to goal
-        
+        //State 2: Follow obstacle
         while(state == 2){
             q_last = path.waypoints.back();
             q_next = controller.step(q_last, stepSize);
             q_target = controller.getCurrentTarget();
 
-            if (q_next == q_last){
+            if ((q_next == q_last) || (q_last == path.waypoints[path.waypoints.size()-2])){
                 std::cout << "Error: q_next == q_last, infinitely stuck" << std::endl;
                 //return path;
             }
 
-            //Testing/////////
-            //controller.printtargetQueue();
-            //return path;
-            /////////////////
 
-            // q_hit reached
+            //Reached Goal
+            if (goalReached(q_next, q_goal, goalReachedError)){
+                path.waypoints.push_back(q_next);
+                path.waypoints.push_back(q_goal);
+                std::cout << "Goal Reached!" << std::endl;
+                //print out the distance traveled
+                std::cout << "Distance traveled: " << pathDistance(path) << std::endl;
+                return path;
+            }
+
+            //M-Line Reached
             
-            if (goalReached(q_next, qH[i], goalReachedError) && qHitGate == false){
-                path.waypoints.push_back(q_next);
-                q_next = controller.step(q_last, (qH[i]-q_last).norm());
-                path.waypoints.push_back(q_next);
-                state = 3;
+            if (controller.checkMLineIntersection(MLinePL, q_goal, q_next)){
+                //Make line to find intersection point
+                //Line2HP qLLine = Line2HP::Through(q_next + directionVec(q_last, q_next), q_last);
+                //Eigen::Vector2d qL_temp = qLLine.intersection(MLineHP);
 
-                std::cout << "q_hit reached!" << std::endl;
-                double dist = pathDistance(path);
+                Eigen::Vector2d qL_temp = q_last;
 
-                //return path if qH is the same as the last qL and exit with failure
-                if (qL.size() > 0){
-                    if (qH[i] == qL.back()){
-                        std::cout << "Error: qH == qL" << std::endl;
-                        return path;
+                //print out M-Line intersection point
+                //std::cout << std::endl << "M-Line intersection qL[" << i << "] = (" << qL_temp[0] << ", " << qL_temp[1] << ")"  << std::endl;
+
+                //Check that the intersection point is closer to the goal than the hit point
+                if ((qL_temp - q_goal).norm() < (qH[i] - q_goal).norm()){
+
+                    //Check that the bug is not blocked from taking a step towards the goal
+                    bool blocked = false;
+                    Eigen::Vector2d q_test = q_last + directionVec(q_last, q_goal)*stepSize;
+                    std::vector<int> collisionList = collisionDetected(problemEX.obstacles, q_test);
+                    for (int i = 0; i < collisionList.size(); i++){
+                        blocked = blocked || (collisionList[i] > -1);
+                    }
+                    
+                    if (!blocked){
+
+                        //Now following goal
+                        //std::cout << "Leaving object and folowing goal" << std::endl;
+                        path.waypoints.push_back(qL_temp);
+                        if (qL.size() == i+1){
+                            qL[i] = qL_temp;
+                        } else{
+                            qL.push_back(qL_temp);
+                        }
+
+                        controller.clearBug();
+                        state = 1;
+                        i++;
+                        continue;
                     }
                 }
-                continue;
-
-                //testing
-                //return path;
             }
             
+
 
             // next vertex target reached
             if (goalReached(q_next, q_target, goalReachedError)){
@@ -205,8 +228,8 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
 
                 //Check target list
                 if (controller.getTargetQueue().size() == 1){
-                    std::cout << std::endl << "q_Hit reached!" << std::endl;
-                    state = 3;
+                    std::cout << std::endl << "q_Hit reached! Exit with failure" << std::endl;
+                    return path;
 
                     //Error case where goal is inside of obstacle
                     if (qL.size() > 0){
@@ -222,16 +245,7 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
                 }
 
                 //std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << "), q_last = (" << q_last[0] << ", " << q_last[1] << ")" << std::endl;  
-                controller.printtargetQueue();
-                
-                
-                if (controller.getTargetQueue().size() < 2){
-                    qHitGate = false;
-                }
-
-                if (controller.getCurrentFollowObstacle() != qH_obstacleIndex){
-                    qHitGate = false;
-                }
+                //controller.printtargetQueue();
                 
             }
 
@@ -239,102 +253,11 @@ amp::Path2D Bug1::plan(const amp::Problem2D& problem){
             if (controller.distTraveled > maxDist){
                 return path;
             }
-        }
-
-        ///if (i==1){
-         //   return path;
-        //}
-
-        std::vector<Eigen::Vector2d> shortestObstaclePath = findShortestPath(controller.getObstaclePathTaken(), q_goal);
-
-        //print out the vertices of the shortest path
-        std::cout << "Shortest path vertices: " << std::endl;
-        for (int i = 0; i < shortestObstaclePath.size(); i++){
-            std::cout << "(" <<  shortestObstaclePath[i][0] << ", " << shortestObstaclePath[i][1] << ")" << std::endl;
-        }
-
-        double dist = vertVecDistance(shortestObstaclePath);
-        std::cout << "Distance of shortest path: " << dist << std::endl;
-
-        //Define and reset state 3 variables
-        qL.push_back(shortestObstaclePath.back());
-        // print the coordinates of the last point in the shortest path to make sure it is not the goal
-        std::cout << "qL[" << i << "] = (" << qL[i][0] << ", " << qL[i][1] << ")" << std::endl;
-
-        q_next = shortestObstaclePath[0];
-        q_target = shortestObstaclePath[1];
-        DLdex = 1;
-
-        //   *If goal is reached
-        //       *exit
-        while(state == 3){
-            //   *Go to q^{L_i}
-            q_last = path.waypoints.back();
-            std::cout << "q_last = (" << q_last[0] << ", " << q_last[1] << ")" << std::endl;
-
-            q_next = shortestObstaclePath[DLdex];
 
 
-            //   *If move toward q_{goal} moves into obstacle
-            //       *exit with failure
-            if (goalReached(q_next, q_goal, goalReachedError)){
-                path.waypoints.push_back(q_next);
-                path.waypoints.push_back(q_goal);
-                std::cout << "Goal Reached!" << std::endl;
-
-                //print out the distance traveled
-                std::cout << "Distance traveled: " << pathDistance(path) << std::endl;
-                return path;
-            }
-
-            // q_L reached
-            if (goalReached(q_next, qL[i], goalReachedError)){
-                path.waypoints.push_back(q_next);
-                q_next = qL[i];
-                path.waypoints.push_back(q_next);
-                state = 1;
-
-                std::cout << "q_leave reached!" << std::endl;
-                double dist = pathDistance(path);
-                i++;
-
-                controller.clearBug();
-
-                continue;
-
-                //testing
-                //return path;
-            }
-
-            /*            // next vertex target reached
-            if (goalReached(q_next, q_target, goalReachedError) && DLdex < shortestObstaclePath.size()-1){
-                path.waypoints.push_back(q_next);
-                q_next = q_target;
-
-                
-                q_target = shortestObstaclePath[DLdex];
-
-                std::cout << "Next vertex reached! Targeting (" << q_target[0] << ", " << q_target[1] << ")" << std::endl;  
-            } else{
-                std::cout << "Error: Incorrectly terminated state 3" << std::endl;
-                return path;
-            }*/
-
-            //   *Else
-            //       *i=i+1
-            //       *continue  
-
-            DLdex += 1;
-            path.waypoints.push_back(q_next);
-
-            if (controller.distTraveled > maxDist){
-                return path;
-            }
-            
         }
 
     }
-    
     return path;
 }
 

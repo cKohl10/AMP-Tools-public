@@ -7,6 +7,7 @@
 // Include any custom headers you created in your workspace
 #include "MyBugAlgorithm.h"
 #include "Bug1.h"
+#include "Bug2.h"
 #include "helperFunc.h"
 #include "PolyGraph.h"
 
@@ -17,7 +18,7 @@ int main(int argc, char** argv) {
     /*    Randomly generate the problem     */ 
 
     // Use WO1 from Exercise 2
-    Problem2D problem = HW2::getWorkspace1();
+    Problem2D problem = HW2::getWorkspace2();
 
     // Use WO2 from Exercise 2
     /*
