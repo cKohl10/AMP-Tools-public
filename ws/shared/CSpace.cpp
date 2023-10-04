@@ -13,7 +13,7 @@ bool CSpace::inCollision(double x0, double x1) const{
     //Check if the end of each link is in colision, then subdivide the link and check again
     Eigen::Vector2d prevP = m_robot->getJointLocation(state, 0); //Previous joint location
     Eigen::Vector2d nextP; //Next joint location
-    int subdivs = 1; //Number of subdivisions to check
+    int subdivs = 0; //Number of subdivisions to check
 
     //Loops through each point in the robot arm
     for (int i = 0; i < m_robot->getLinkLengths().size(); i++){
