@@ -1,5 +1,9 @@
 #include "LinkMan.h"
 
+/// @brief Vector of angles (radians) for each joint. The size of the vector should match the 
+/// number of links (and hence joints) of the manipulator
+using ManipulatorState = std::vector<double>;
+
 
 LinkMan::LinkMan() : amp::LinkManipulator2D(){
 
@@ -46,7 +50,34 @@ Eigen::Vector2d LinkMan::getJointLocation(const ManipulatorState& state, uint32_
 /// @param end_effector_location End effector coordinate
 /// @return Joint angle state (radians) in increasing joint index order. Must have size() ==nLinks()
 ManipulatorState LinkMan::getConfigurationFromIK(const Eigen::Vector2d& end_effector_location) const{
-    ManipulatorState state;
+
+    //####### Assumptions #######
+    // - The angle that the third link approaches the given location is defined by writst angle w
+    // - Two possible states remain, one state is chosen by the signs in the IK equations and the other one is removed
+    // - The first link is always at the origin
+
+    //####### IK Equations for 3DOF #######
+    // This is using the equations derived from HW3
+    double w = M_PI; //Wrist Angle: Rad
+    double x = end_effector_location.x(); //End Effector X: m
+    double y = end_effector_location.y(); //End Effector Y: m
+    double a1 = m_link_lengths[0]; //Link 1 Length: m    
+    double a2 = m_link_lengths[1]; //Link 2 Length: m
+    double a3 = m_link_lengths[2]; //Link 3 Length: m
+
+    //Calculate middle angle first
+    double t2 = acos(( pow(x+a3*cos(w), 2) + pow(y+a3*sin(w), 2) - pow(a1, 2) - pow(a2, 2) )/(2*a1*a2));
+
+    //Check if valid. Returns true if NaN
+    if (t2 != t2){
+        std::cout << "Invalid IK" << std::endl;
+        return {0, 0, 0};
+    }
+
+    double t1 = atan2((y+a3*sin(w)), (x+a3*cos(w))) - atan2(( a2*sin(t2) ),( a1+a2*cos(t2) ));
+    double t3 = (M_PI+w) - t1 - t2;
+
+    ManipulatorState state = {t1, t2, t3};
 
     return state;
 }
