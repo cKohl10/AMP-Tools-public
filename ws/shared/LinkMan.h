@@ -11,6 +11,14 @@ using ManipulatorTrajectory = std::list<ManipulatorState>;
 
 class LinkMan : public amp::LinkManipulator2D{
     public:
+        //Class contructors
+        LinkMan();
+        LinkMan(const std::vector<double>& link_lengths);
+        LinkMan(const Eigen::Vector2d& base_location, const std::vector<double>& link_lengths);
+
         Eigen::Vector2d getJointLocation(const ManipulatorState& state, uint32_t joint_index) const;
         ManipulatorState getConfigurationFromIK(const Eigen::Vector2d& end_effector_location) const;
+
+    private:
+        Eigen::MatrixXd Tmatrix(double angle, double a) const;
 };

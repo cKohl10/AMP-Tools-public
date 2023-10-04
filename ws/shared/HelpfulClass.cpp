@@ -17,7 +17,7 @@ double vecAngle(Eigen::Vector2d v1, Eigen::Vector2d v2){
     //print the vNorm indices
     double angle = atan2(vNorm.y(), vNorm.x());
     angle = (angle < 0) ? angle + 2*M_PI : angle;
-    std::cout << "vNorm: (" << vNorm.x() << ", " << vNorm.y() << "), angle of " << angle*(180/M_PI) << std::endl;
+    //std::cout << "vNorm: (" << vNorm.x() << ", " << vNorm.y() << "), angle of " << angle*(180/M_PI) << std::endl;
 
 
     return angle;
@@ -115,10 +115,10 @@ amp::Polygon minkowskiSum(amp::Polygon robot, amp::Polygon b) {
         double anglea = vecAngle(av[(i)%av.size()], av[(i+1)%av.size()]);
         double angleb = vecAngle(bv[(j)%bv.size()], bv[(j+1)%bv.size()]);
 
-        std::cout << "Polygon a: " << std::endl;
-        std::cout << "(" << av[i].x() << ", " << av[i].y() << ") to (" << av[(i+1)%av.size()].x() << ", " << av[(i+1)%av.size()].y() << "), angle of " << anglea*(180/M_PI) << std::endl;
-        std::cout << "Polygon b: " << std::endl;
-        std::cout << "(" << bv[j].x() << ", " << bv[j].y() << ") to (" << bv[(j+1)%bv.size()].x() << ", " << bv[(j+1)%bv.size()].y() << "), angle of " << angleb*(180/M_PI) << std::endl << std::endl;
+        //std::cout << "Polygon a: " << std::endl;
+        //std::cout << "(" << av[i].x() << ", " << av[i].y() << ") to (" << av[(i+1)%av.size()].x() << ", " << av[(i+1)%av.size()].y() << "), angle of " << anglea*(180/M_PI) << std::endl;
+        //std::cout << "Polygon b: " << std::endl;
+        //std::cout << "(" << bv[j].x() << ", " << bv[j].y() << ") to (" << bv[(j+1)%bv.size()].x() << ", " << bv[(j+1)%bv.size()].y() << "), angle of " << angleb*(180/M_PI) << std::endl << std::endl;
 
         if (anglea < angleb){
             i++;

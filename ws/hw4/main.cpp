@@ -16,6 +16,8 @@ int main(int argc, char** argv) {
 
 
     //################# Problem 1 #################//
+
+    std::cout << "Starting Problem 1: " << std::endl;
     // Workspace obstacles and robot set to be visualized
     std::vector<amp::Polygon> polygons;
 
@@ -42,12 +44,21 @@ int main(int argc, char** argv) {
     //Create 3d figure from visualizer class
     std::vector<amp::Polygon> polygonsP1a;
     polygonsP1a.push_back(polygons[0]);
-    amp::Visualizer::makeFigure(polygonsP1a);
-    amp::Visualizer::makeFigure(polygons, heights);
-    amp::Visualizer::showFigures();
+    //amp::Visualizer::makeFigure(polygonsP1a);
+    //amp::Visualizer::makeFigure(polygons, heights);
+    //amp::Visualizer::showFigures();
 
     //################# Problem 2 #################//
-    LinkMan manipulator = LinkMan();
+    std::cout << "Starting Problem 2: " << std::endl;
+    std::vector<double> linkLengths = {1.0, 2.0, 3.0};
+    ManipulatorState state = {0.0, 0.0, 0.0};
+
+    LinkMan manipulator = LinkMan(linkLengths);
+    amp::Visualizer::makeFigure(manipulator, state);
+    amp::Visualizer::showFigures();
+
+    //Get the joint location of end effector
+    //Eigen::Vector2d jointLocation = manipulator.getJointLocation(state, 3);
 
 
     // Grade method
