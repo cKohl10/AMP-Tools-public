@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AMPCore.h"
+#include "HelpfulClass.h"
 
 /// @brief Vector of angles (radians) for each joint. The size of the vector should match the 
 /// number of links (and hence joints) of the manipulator

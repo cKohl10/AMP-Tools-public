@@ -2,6 +2,7 @@
 
 #include "AMPCore.h"
 #include "LinkMan.h"
+#include "Eigen/Geometry"
 
 class CSpace : public amp::GridCSpace2D {
     public:
@@ -15,12 +16,13 @@ class CSpace : public amp::GridCSpace2D {
         /// @param x0_max 
         /// @param x1_min 
         /// @param x1_max 
-        CSpace(LinkMan robot, amp::Environment2D enviroment, std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max);
+        CSpace(const amp::LinkManipulator2D& robot, const amp::Environment2D& enviroment, std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max);
 
         bool inCollision(double x0, double x1) const;
-        bool collisionDetected(Eigen::Vector2d position);
 
     private:
-        LinkMan m_robot;
+        bool collisionDetected(Eigen::Vector2d position) const;
+        bool subdivide(Eigen::Vector2d b1, Eigen::Vector2d b2, int counter) const;
+        const amp::LinkManipulator2D *m_robot;
         amp::Environment2D m_enviroment;
 };
