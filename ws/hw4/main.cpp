@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     //print results of state2b
     std::cout << "State 2b: " << state2b[0] << ", " << state2b[1] << ", " << state2b[2] << std::endl;
 
-    amp::Visualizer::makeFigure(manipulator2b, state2b);
+    //amp::Visualizer::makeFigure(manipulator2b, state2b);
 
 
 //################# Problem 3 #################//
@@ -86,9 +86,9 @@ int main(int argc, char** argv) {
     LinkMan manipulator3a = LinkMan(linkLengths3a);
     CSpaceConstructor constructor = CSpaceConstructor();
 
-    //amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3a));
-    //amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3b));
-    //amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3c));
+    amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3a));
+    amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3b));
+    amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3c));
 
     //Create the C-Space
     // std::size_t x0_cells = 100; 

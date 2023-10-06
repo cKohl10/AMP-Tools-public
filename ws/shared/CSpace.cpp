@@ -2,18 +2,45 @@
 #include "CSpace.h"
 #include "HelpfulClass.h"
 
-CSpace::CSpace(const amp::LinkManipulator2D& robot, const amp::Environment2D& enviroment, std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max) : amp::GridCSpace2D(x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max){
+CSpace::CSpace(const amp::LinkManipulator2D& robot, const amp::Environment2D& environment, std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max) : amp::GridCSpace2D(x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max){
     m_robot = &robot;
-    m_enviroment = enviroment;
+    m_environment = environment;
 }
 
+//Checks the full link manipulator for collisions
 bool CSpace::inCollision(double x0, double x1) const{
 
+    //############# Line Collision Detection #############//
     ManipulatorState state = {x0, x1};
+    std::vector<amp::Polygon> o = m_environment.obstacles;
+
+    // Start by finding all the joint vertices of the robot
+    Eigen::Vector2d v0 = m_robot->getJointLocation(state,0);
+    Eigen::Vector2d v1 = m_robot->getJointLocation(state,1);
+    Eigen::Vector2d v2 = m_robot->getJointLocation(state,2);
+
+    // Next, find if any of the vertices are in collision with any of the obstacles
+    for (int i = 0; i < o.size(); i++){
+
+        // get vertices current obstacle
+        std::vector<Eigen::Vector2d> obsVertices = o[i].verticesCCW();
+
+        // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
+        for (int j = 0; j < obsVertices.size(); j++){
+            // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
+            if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()]) || intersect(v1,v2,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
+                return true;
+            }
+        }
+    }
+    return false;
+
+    /*
+    //############# Subdivision Collision Detection #############//
     //Check if the end of each link is in colision, then subdivide the link and check again
     Eigen::Vector2d prevP = m_robot->getJointLocation(state, 0); //Previous joint location
     Eigen::Vector2d nextP; //Next joint location
-    int subdivs = 0; //Number of subdivisions to check
+    int subdivs = 10; //Number of subdivisions to check
 
     //Loops through each point in the robot arm
     for (int i = 0; i < m_robot->getLinkLengths().size(); i++){
@@ -30,7 +57,7 @@ bool CSpace::inCollision(double x0, double x1) const{
         prevP = nextP;
     }
     //Check if the polygon is in collision
-    return false;
+    return false;*/
 }
 
 /// @brief This builds a union of primitives for each obstacle and compares the location of the point to the union
@@ -41,7 +68,7 @@ bool CSpace::collisionDetected(Eigen::Vector2d position) const{
     bool collisionCW = false; //collision checker
 
     // Access every obstacle
-    for (amp::Obstacle2D o : m_enviroment.obstacles){
+    for (amp::Obstacle2D o : m_environment.obstacles){
         std::vector<Eigen::Vector2d> v = o.verticesCCW();
         
         //print object vertices v
@@ -86,6 +113,36 @@ bool CSpace::collisionDetected(Eigen::Vector2d position) const{
     }
 
     return false;
+}
+
+//Determines if there is an intersection point between two lines
+//Credit: https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+bool CSpace::intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2) const{
+    double x1 = p1.x();
+    double y1 = p1.y();
+    double x2 = q1.x();
+    double y2 = q1.y();
+    double x3 = p2.x();
+    double y3 = p2.y();
+    double x4 = q2.x();
+    double y4 = q2.y();
+
+    // Check if none of the lines are of length 0
+    if ((x1 == x2 && y1 == y2) || (x3 == x4 && y3 == y4)) {
+        return false;
+    }
+    double denom = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+    // Lines are parallel
+    if (denom == 0) {
+        return false;
+    }
+    double ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3))/denom;
+    double ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3))/denom;
+    // is the intersection along the segments
+    if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+        return false;
+    }
+    return true; // is intersection
 }
 
 //Subdivides until a specific number of subdivisions is reached. Checks for collisions on all subdivisions

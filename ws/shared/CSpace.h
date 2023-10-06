@@ -23,6 +23,7 @@ class CSpace : public amp::GridCSpace2D {
     private:
         bool collisionDetected(Eigen::Vector2d position) const;
         bool subdivide(Eigen::Vector2d b1, Eigen::Vector2d b2, int counter) const;
+        bool intersect(Eigen::Vector2d p1, Eigen::Vector2d q1, Eigen::Vector2d p2, Eigen::Vector2d q2) const;
         const amp::LinkManipulator2D *m_robot;
-        amp::Environment2D m_enviroment;
+        amp::Environment2D m_environment;
 };

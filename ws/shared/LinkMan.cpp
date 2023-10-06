@@ -62,7 +62,15 @@ ManipulatorState LinkMan::getConfigurationFromIK(const Eigen::Vector2d& end_effe
     }
 //####### IK Equations for 2DOF #######
     if (m_link_lengths.size() == 2){
-        std::cout << "2DOF IK not implemented" << std::endl;    
+        double x = end_effector_location.x(); //End Effector X: m
+        double y = end_effector_location.y(); //End Effector Y: m
+        double a1 = m_link_lengths[0]; //Link 1 Length: m    
+        double a2 = m_link_lengths[1]; //Link 2 Length: m
+        double a3 = m_link_lengths[2]; //Link 3 Length: m
+        double t2 = 0;
+        t2= acos(( pow(x, 2) + pow(y, 2) - pow(a1, 2) - pow(a2, 2) )/(2*a1*a2));   
+        double t1 = atan2((y), (x)) - atan2(( a2*sin(t2) ),( a1+a2*cos(t2) ));
+        state = {t1, t2};
     }
 //####### IK Equations for 3DOF #######
     if (m_link_lengths.size() == 3){
