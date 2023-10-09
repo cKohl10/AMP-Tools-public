@@ -61,11 +61,11 @@ int main(int argc, char** argv) {
     std::vector<double> linkLengths2b = {1.0, 0.5, 1.0};
 
     LinkMan manipulator2b = LinkMan(linkLengths2b);
-    ManipulatorState state2b = manipulator2b.getConfigurationFromIK(Eigen::Vector2d(2.0, 0.0));
+    ManipulatorState state2b = manipulator2b.getConfigurationFromIK(Eigen::Vector2d(-0.268559, -0.288032));
     //print results of state2b
     std::cout << "State 2b: " << state2b[0] << ", " << state2b[1] << ", " << state2b[2] << std::endl;
 
-    //amp::Visualizer::makeFigure(manipulator2b, state2b);
+    amp::Visualizer::makeFigure(manipulator2b, state2b);
 
 
 //################# Problem 3 #################//
