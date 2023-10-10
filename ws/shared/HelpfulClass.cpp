@@ -157,3 +157,32 @@ amp::Polygon invertPolygon(amp::Polygon a){
     }
     return amp::Polygon(av);
 }
+
+//credit to https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+bool intersect(const Eigen::Vector2d& p1, const Eigen::Vector2d& q1, const Eigen::Vector2d& p2, const Eigen::Vector2d& q2){
+    double x1 = p1.x();
+    double y1 = p1.y();
+    double x2 = q1.x();
+    double y2 = q1.y();
+    double x3 = p2.x();
+    double y3 = p2.y();
+    double x4 = q2.x();
+    double y4 = q2.y();
+
+    // Check if none of the lines are of length 0
+    if ((x1 == x2 && y1 == y2) || (x3 == x4 && y3 == y4)) {
+        return false;
+    }
+    double denom = ((y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1));
+    // Lines are parallel
+    if (denom == 0) {
+        return false;
+    }
+    double ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3))/denom;
+    double ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3))/denom;
+    // is the intersection along the segments
+    if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+        return false;
+    }
+    return true; // is intersection
+}
