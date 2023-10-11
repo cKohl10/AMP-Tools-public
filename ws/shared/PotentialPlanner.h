@@ -7,7 +7,10 @@
 class PotentialPlanner : public amp::GDAlgorithm{
     public:
         PotentialPlanner();
+        PotentialPlanner(double zeta, double d_star, double eta, double Q_star, double epsilon, double stepSize, int maxSteps, int rays); 
+        PotentialPlanner(double zeta, double d_star, double eta, double Q_star, double epsilon, double stepSize, int maxSteps, int rays, Eigen::Vector2d push_direction, double push_magnitude);
         amp::Path2D plan(const amp::Problem2D& problem);
+        void changeSensingMode();
 
     private:
         //############# HYPER PARAMETERS #############
@@ -26,6 +29,12 @@ class PotentialPlanner : public amp::GDAlgorithm{
         double epsilon; //Threshold for the potential function exit condition
         double stepSize; //Step size for gradient descent
         int maxSteps; //Maximum number of steps for gradient descent
+        double goalRange; //Distance from the goal where the robot is considered to have reached the goal
+        bool doRawScanning;
+
+        //  Push Potential
+        Eigen::Vector2d push_direction; //Direction of the push
+        double push_magnitude; //Magnitude of the push
         //############################################
 
         

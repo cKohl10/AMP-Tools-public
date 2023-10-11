@@ -14,9 +14,11 @@ class RangeDetector{
         RangeDetector(double range, int rays);
 
         void scan(const std::vector<amp::Polygon>& obstacles, const Eigen::Vector2d& pos);
+        void scanRaw(const std::vector<amp::Polygon>& obstacles, const Eigen::Vector2d& pos);
 
         CastHit makeCastHit(int obstacleIndex, double distance, Eigen::Vector2d direction);
         std::vector<CastHit> getLog();
+        std::vector<CastHit> avgDirection();
     
     private: 
         //############# HYPER PARAMETERS #############

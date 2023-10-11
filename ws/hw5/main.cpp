@@ -12,38 +12,126 @@ using namespace amp;
 
 int main(int argc, char** argv) {
 
-    // Use WO1 from Exercise 2
-    Problem2D problem = HW5::getWorkspace1();
-
-    // Use WO2 from Exercise 2
-    /*
-    Problem2D problem = HW2::getWorkspace2();
-    */
-
-    // Make a random environment spec, edit properties about it such as the number of obstacles
-    /*
-    Random2DEnvironmentSpecification spec;
-    spec.max_obstacle_region_radius = 5.0;
-    spec.n_obstacles = 2;
-    spec.path_clearance = 0.01;
-    spec.d_sep = 0.01;
-
-    //Randomly generate the environment;
-    Problem2D problem = EnvironmentTools::generateRandom(spec); // Random environment
-    */
-    //problem = fixOverlappingPolygons(problem);
-
-    // Declare your algorithm object 
-    PotentialPlanner algo;
+    // Choose problems to run
+    std::vector<bool> run = {true, true, true};
     
-    {
+    
+    if (run[0]){
+        std::cout << "Running Problem 2A..." << std::endl;
+
+        //################ For Workspace 2A ######################
+        //  Attracitve Potential
+        double zeta = 1;
+        double d_star = 0.5;
+
+        //  Repulsive Potential
+        double Q_star = 2;
+        double eta = 0.1;
+
+        //  Gradient Descent
+        double epsilon = 0.01;
+        double stepSize = 0.01;
+        int maxSteps = 10000;
+        
+        //  Range Detector
+        int rays = 20;
+        PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays);
+        //########################################################
+
+        // Get Workspaces
+        Problem2D problem = HW5::getWorkspace1();
+
         // Call your algorithm on the problem
-        amp::Path2D path = algo.plan(problem);
+        amp::Path2D path = GDPlanner.plan(problem);
 
         // Check your path to make sure that it does not collide with the environment 
         bool success = HW5::check(path, problem);
 
         LOG("Found valid solution to workspace 1: " << (success ? "Yes!" : "No :("));
+
+        // Visualize the path and environment
+        Visualizer::makeFigure(problem, path);
+    }
+
+    if (run[1]){
+        std::cout << "Running Problem 2B-1..." << std::endl;
+
+        //################ For Workspace 2A ######################
+        //  Attracitve Potential
+        double zeta = 0.02;
+        double d_star = 2;
+
+        //  Repulsive Potential
+        double Q_star = 10;
+        double eta = 0.002;
+
+        //  Gradient Descent
+        double epsilon = 0.00001;
+        double stepSize = 0.5;
+        int maxSteps = 10000;
+
+        //Initial Push - Needed for some workspaces
+        Eigen::Vector2d push_direction = Eigen::Vector2d(1, 0);
+        double push_magnitude = 0.0 /stepSize;
+        
+        //  Range Detector
+        int rays = 100;
+        PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, push_direction, push_magnitude);
+        GDPlanner.changeSensingMode();
+        //########################################################
+
+        // Get Workspaces
+        Problem2D problem = HW2::getWorkspace1();
+
+        // Call your algorithm on the problem
+        amp::Path2D path = GDPlanner.plan(problem);
+
+        // Check your path to make sure that it does not collide with the environment 
+        bool success = HW5::check(path, problem);
+
+        LOG("Found valid solution to workspace 2: " << (success ? "Yes!" : "No :("));
+
+        // Visualize the path and environment
+        Visualizer::makeFigure(problem, path);
+    }
+
+    if (run[2]){
+        std::cout << "Running Problem 2B-2..." << std::endl;
+
+        //################ For Workspace 2A ######################
+        //  Attracitve Potential
+        double zeta = 0.1;
+        double d_star = 0.5;
+
+        //  Repulsive Potential
+        double Q_star = 1000;
+        double eta = 0.05;
+
+        //  Gradient Descent
+        double epsilon = 0.001;
+        double stepSize = 1;
+        int maxSteps = 10000;
+        
+        //Initial Push - Needed for some workspaces
+        Eigen::Vector2d push_direction = Eigen::Vector2d(0.0, 1).normalized();
+        double push_magnitude = 0.0 / stepSize;
+        
+        //  Range Detector
+        int rays = 100;
+        PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, push_direction, push_magnitude);
+        GDPlanner.changeSensingMode();
+        //########################################################
+
+        // Get Workspaces
+        Problem2D problem = HW2::getWorkspace2();
+
+        // Call your algorithm on the problem
+        amp::Path2D path = GDPlanner.plan(problem);
+
+        // Check your path to make sure that it does not collide with the environment 
+        bool success = HW5::check(path, problem);
+
+        LOG("Found valid solution to workspace 3: " << (success ? "Yes!" : "No :("));
 
         // Visualize the path and environment
         Visualizer::makeFigure(problem, path);
