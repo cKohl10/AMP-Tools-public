@@ -98,7 +98,7 @@ amp::Path2D PotentialPlanner::plan(const amp::Problem2D& problem) {
             GU = GU - push_magnitude * push_direction;
         }
 
-        std::cout << "GU: (" << GU.x() << ", " << GU.y() << ")" << std::endl;
+        //std::cout << "GU: (" << GU.x() << ", " << GU.y() << ")" << std::endl;
 
         //Take a step
         q = q - stepSize * GU;

@@ -186,3 +186,16 @@ bool intersect(const Eigen::Vector2d& p1, const Eigen::Vector2d& q1, const Eigen
     }
     return true; // is intersection
 }
+
+// Returns the distance of the path
+double pathDistance(amp::Path2D path){
+    double distance = 0;
+    for (int i = 0; i < path.waypoints.size()-1; i++){
+        //print out the individual distances
+        //std::cout << "The distance between (" << path.waypoints[i](0) << ", " << path.waypoints[i](1) << ") and (" << path.waypoints[i+1](0) << ", " << path.waypoints[i+1](1) << ") is: " << (path.waypoints[i+1] - path.waypoints[i]).norm() << std::endl;
+
+        distance += (path.waypoints[i+1] - path.waypoints[i]).norm();
+    }
+    //std::cout << "The path distance is: " << distance << std::endl;
+    return distance;
+}

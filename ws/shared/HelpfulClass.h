@@ -9,5 +9,6 @@ amp::Polygon rotatePolygon(amp::Polygon &poly, double angle);
 amp::Polygon invertPolygon(amp::Polygon a);
 void printPolygonVertices(amp::Polygon a);
 bool intersect(const Eigen::Vector2d& p1, const Eigen::Vector2d& q1, const Eigen::Vector2d& p2, const Eigen::Vector2d& q2);
+double pathDistance(amp::Path2D path);
 
 double vecAngle(Eigen::Vector2d v1, Eigen::Vector2d v2);

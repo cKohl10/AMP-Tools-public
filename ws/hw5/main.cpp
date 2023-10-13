@@ -44,6 +44,9 @@ int main(int argc, char** argv) {
         // Call your algorithm on the problem
         amp::Path2D path = GDPlanner.plan(problem);
 
+        //Return path distance
+        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
+
         // Check your path to make sure that it does not collide with the environment 
         bool success = HW5::check(path, problem);
 
@@ -86,6 +89,9 @@ int main(int argc, char** argv) {
         // Call your algorithm on the problem
         amp::Path2D path = GDPlanner.plan(problem);
 
+        //Return path distance
+        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
+
         // Check your path to make sure that it does not collide with the environment 
         bool success = HW5::check(path, problem);
 
@@ -104,11 +110,11 @@ int main(int argc, char** argv) {
         double d_star = 0.5;
 
         //  Repulsive Potential
-        double Q_star = 1000;
-        double eta = 0.05;
+        double Q_star = 1.5;
+        double eta = 0.01;
 
         //  Gradient Descent
-        double epsilon = 0.001;
+        double epsilon = 0.0001;
         double stepSize = 1;
         int maxSteps = 10000;
         
@@ -127,6 +133,9 @@ int main(int argc, char** argv) {
 
         // Call your algorithm on the problem
         amp::Path2D path = GDPlanner.plan(problem);
+
+        //Return path distance
+        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
 
         // Check your path to make sure that it does not collide with the environment 
         bool success = HW5::check(path, problem);
