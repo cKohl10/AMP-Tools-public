@@ -35,6 +35,7 @@ PotentialPlanner::PotentialPlanner(double zeta, double d_star, double eta, doubl
     this->maxSteps = maxSteps;
 
     this->doRawScanning = false;
+    this->setIndex = -1;
     
     //  Range Detector
     sensor = RangeDetector(Q_star, rays);
@@ -60,12 +61,47 @@ PotentialPlanner::PotentialPlanner(double zeta, double d_star, double eta, doubl
     this->push_magnitude = push_magnitude;
 
     this->doRawScanning = false;
+
+    this->setIndex = -1;
     
     //  Range Detector
     sensor = RangeDetector(Q_star, rays);
 }
 
+PotentialPlanner::PotentialPlanner(std::vector<GDVars> varSets) {
+    // //  Attracitve Potential
+    // this->zeta = varSets[0].zeta;
+    // this->d_star = varSets[0].d_star;
+
+    // //  Repulsive Potential
+    // this->Q_star = varSets[0].Q_star;
+    // this->eta = varSets[0].eta;
+
+    // //  Gradient Descent
+    // this->epsilon = varSets[0].epsilon;
+    // this->stepSize = varSets[0].stepSize;
+    // this->maxSteps = varSets[0].maxSteps;
+    // this->goalRange = 0.5;
+
+    // //  Push Potential
+    // this->push_direction = varSets[0].push_direction;
+    // this->push_magnitude = varSets[0].push_magnitude;
+
+    // this->doRawScanning = false;
+    
+    // //  Range Detector
+    // sensor = RangeDetector(Q_star, varSets[0].rays);
+
+    this->setIndex = 0;
+    this->varSets = varSets;
+}
+
 amp::Path2D PotentialPlanner::plan(const amp::Problem2D& problem) {
+    //Check if the plan needs to change for grading
+    if (setIndex != -1 && setIndex < varSets.size()){
+        changePlan();
+    }
+
     amp::Path2D path;
     //Add the initial point to the path
     path.waypoints.push_back(problem.q_init);
@@ -155,4 +191,53 @@ Eigen::Vector2d PotentialPlanner::repulsivePotential(const Eigen::Vector2d& q, c
 
 void PotentialPlanner::changeSensingMode() {
     doRawScanning = !doRawScanning;
+}
+
+GDVars::GDVars(double zeta, double d_star, double eta, double Q_star, double epsilon, double stepSize, int maxSteps, int rays, bool rawScanning) {
+    this->zeta = zeta;
+    this->d_star = d_star;
+    this->eta = eta;
+    this->Q_star = Q_star;
+    this->epsilon = epsilon;
+    this->stepSize = stepSize;
+    this->maxSteps = maxSteps;
+    this->rays = rays;
+    this->doRawScanning = rawScanning;
+}
+
+void PotentialPlanner::changePlan(){
+    //  Attracitve Potential
+    this->zeta = varSets[setIndex].zeta;
+    this->d_star = varSets[setIndex].d_star;
+
+    //  Repulsive Potential
+    this->Q_star = varSets[setIndex].Q_star;
+    this->eta = varSets[setIndex].eta;
+
+    //  Gradient Descent
+    this->epsilon = varSets[setIndex].epsilon;
+    this->stepSize = varSets[setIndex].stepSize;
+    this->maxSteps = varSets[setIndex].maxSteps;
+    this->goalRange = 0.5;
+
+    this->doRawScanning = varSets[setIndex].doRawScanning;
+    
+    //  Range Detector
+    sensor = RangeDetector(Q_star, varSets[setIndex].rays);
+
+    //Print out the new changes to variables
+    std::cout << "########## New Plan ##############" << std::endl;
+    std::cout << "zeta: " << zeta << std::endl;
+    std::cout << "d_star: " << d_star << std::endl;
+    std::cout << "eta: " << eta << std::endl;
+    std::cout << "Q_star: " << Q_star << std::endl;
+    std::cout << "epsilon: " << epsilon << std::endl;
+    std::cout << "stepSize: " << stepSize << std::endl;
+    std::cout << "maxSteps: " << maxSteps << std::endl;
+    std::cout << "rays: " << varSets[setIndex].rays << std::endl;
+
+    
+
+    //Change to next index
+    setIndex++;
 }

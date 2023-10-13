@@ -14,6 +14,7 @@ int main(int argc, char** argv) {
 
     // Choose problems to run
     std::vector<bool> run = {true, true, true};
+    std::vector<GDVars> varSets;
     
     
     if (run[0]){
@@ -36,24 +37,25 @@ int main(int argc, char** argv) {
         //  Range Detector
         int rays = 20;
         PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays);
+        varSets.push_back(GDVars(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, false));
         //########################################################
 
-        // Get Workspaces
-        Problem2D problem = HW5::getWorkspace1();
+        // // Get Workspaces
+        // Problem2D problem = HW5::getWorkspace1();
 
-        // Call your algorithm on the problem
-        amp::Path2D path = GDPlanner.plan(problem);
+        // // Call your algorithm on the problem
+        // amp::Path2D path = GDPlanner.plan(problem);
 
-        //Return path distance
-        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
+        // //Return path distance
+        // std::cout << "Path Distance: " << pathDistance(path) << std::endl;
 
-        // Check your path to make sure that it does not collide with the environment 
-        bool success = HW5::check(path, problem);
+        // // Check your path to make sure that it does not collide with the environment 
+        // bool success = HW5::check(path, problem);
 
-        LOG("Found valid solution to workspace 1: " << (success ? "Yes!" : "No :("));
+        // LOG("Found valid solution to workspace 1: " << (success ? "Yes!" : "No :("));
 
-        // Visualize the path and environment
-        Visualizer::makeFigure(problem, path);
+        // // Visualize the path and environment
+        // //Visualizer::makeFigure(problem, path);
     }
 
     if (run[1]){
@@ -81,24 +83,25 @@ int main(int argc, char** argv) {
         int rays = 100;
         PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, push_direction, push_magnitude);
         GDPlanner.changeSensingMode();
+        varSets.push_back(GDVars(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, true));
         //########################################################
 
-        // Get Workspaces
-        Problem2D problem = HW2::getWorkspace1();
+        // // Get Workspaces
+        // Problem2D problem = HW2::getWorkspace1();
 
-        // Call your algorithm on the problem
-        amp::Path2D path = GDPlanner.plan(problem);
+        // // Call your algorithm on the problem
+        // amp::Path2D path = GDPlanner.plan(problem);
 
-        //Return path distance
-        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
+        // //Return path distance
+        // std::cout << "Path Distance: " << pathDistance(path) << std::endl;
 
-        // Check your path to make sure that it does not collide with the environment 
-        bool success = HW5::check(path, problem);
+        // // Check your path to make sure that it does not collide with the environment 
+        // bool success = HW5::check(path, problem);
 
-        LOG("Found valid solution to workspace 2: " << (success ? "Yes!" : "No :("));
+        // LOG("Found valid solution to workspace 2: " << (success ? "Yes!" : "No :("));
 
-        // Visualize the path and environment
-        Visualizer::makeFigure(problem, path);
+        // // Visualize the path and environment
+        // //Visualizer::makeFigure(problem, path);
     }
 
     if (run[2]){
@@ -126,29 +129,65 @@ int main(int argc, char** argv) {
         int rays = 100;
         PotentialPlanner GDPlanner(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, push_direction, push_magnitude);
         GDPlanner.changeSensingMode();
+        varSets.push_back(GDVars(zeta, d_star, eta, Q_star, epsilon, stepSize, maxSteps, rays, true));
         //########################################################
 
-        // Get Workspaces
-        Problem2D problem = HW2::getWorkspace2();
+        // // Get Workspaces
+        // Problem2D problem = HW2::getWorkspace2();
 
-        // Call your algorithm on the problem
-        amp::Path2D path = GDPlanner.plan(problem);
+        // // Call your algorithm on the problem
+        // amp::Path2D path = GDPlanner.plan(problem);
 
-        //Return path distance
-        std::cout << "Path Distance: " << pathDistance(path) << std::endl;
+        // //Return path distance
+        // std::cout << "Path Distance: " << pathDistance(path) << std::endl;
 
-        // Check your path to make sure that it does not collide with the environment 
-        bool success = HW5::check(path, problem);
+        // // Check your path to make sure that it does not collide with the environment 
+        // bool success = HW5::check(path, problem);
 
-        LOG("Found valid solution to workspace 3: " << (success ? "Yes!" : "No :("));
+        // LOG("Found valid solution to workspace 3: " << (success ? "Yes!" : "No :("));
 
-        // Visualize the path and environment
-        Visualizer::makeFigure(problem, path);
+        // // Visualize the path and environment
+        // //Visualizer::makeFigure(problem, path);
     }
 
-    Visualizer::showFigures();
 
-    //HW2::grade(algo, "carson.kohlbrenner@colorado.edu", argc, argv);
+    // std::cout << "Testing New Set Notation" << std::endl;
+    // //Final Planner for grading
+    // PotentialPlanner GDPlanner(varSets);
+    // //GDPlanner.changeSensingMode();
+
+    // // ########## Problem 1 ###########
+    //         // Get Workspaces
+    //     Problem2D problem = HW5::getWorkspace1();
+
+    //     // Call your algorithm on the problem
+    //     amp::Path2D path = GDPlanner.plan(problem);
+    //     Visualizer::makeFigure(problem, path);
+    
+    // // ########## Problem 2 ###########
+    //     // Get Workspaces
+    //     problem = HW2::getWorkspace1();
+
+    //     // Call your algorithm on the problem
+    //     path = GDPlanner.plan(problem);
+    //     Visualizer::makeFigure(problem, path);
+
+    // // ########## Problem 3 ########### 
+    //     // Get Workspaces
+    //     problem = HW2::getWorkspace2();
+
+    //     // Call your algorithm on the problem
+    //     path = GDPlanner.plan(problem);
+    //     Visualizer::makeFigure(problem, path);
+
+
+    // Visualizer::showFigures();
+
+    //Final Planner for grading
+    PotentialPlanner GDPlanner2(varSets);
+    //GDPlanner2.changeSensingMode();
+
+    HW5::grade(GDPlanner2, "carson.kohlbrenner@colorado.edu", argc, argv);
 
     return 0;
 }
