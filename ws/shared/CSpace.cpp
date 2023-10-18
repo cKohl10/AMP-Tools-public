@@ -7,14 +7,23 @@ CSpace::CSpace(const amp::LinkManipulator2D& robot, const amp::Environment2D& en
     m_environment = environment;
 }
 
-std::pair<std::size_t, std::size_t> CSpace::getCellFromPoint(double x0, double x1) const{
-    //Calculate the step size for each dimension
-    double x0_step = (m_x0_bounds.second - m_x0_bounds.second)/size().first;
-    double x1_step = (m_x1_bounds.second - m_x1_bounds.second)/size().second;
+std::pair<std::size_t, std::size_t> CSpace::getCellFromPoint(double x0, double x1) const {
 
-    //Calculate the cell indices
+    //Calculate the step size for each dimension
+    double x0_step = (m_x0_bounds.second - m_x0_bounds.first)/size().first;
+    double x1_step = (m_x1_bounds.second - m_x1_bounds.first)/size().second;
+
+    //Calculate the cell indices and floor them
     std::size_t i = (x0 - m_x0_bounds.first)/x0_step;
     std::size_t j = (x1 - m_x1_bounds.first)/x1_step;
+
+    //Debuging:
+    std::cout << std::endl << "New getCellFromPoint() function called!" << std::endl;
+    std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
+    std::cout << "x0_step: " << x0_step << " x1_step: " << x1_step << std::endl;
+    std::cout << "m_x0_bounds.first: " << m_x0_bounds.first << " m_x0_bounds.second: " << m_x0_bounds.second << std::endl;
+    std::cout << "m_x1_bounds.first: " << m_x1_bounds.first << " m_x1_bounds.second: " << m_x1_bounds.second << std::endl;
+    std::cout << "i: " << i << " j: " << j << std::endl << std::endl;
 
     return std::make_pair(i, j);
 }

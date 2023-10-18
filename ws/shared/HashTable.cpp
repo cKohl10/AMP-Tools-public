@@ -155,6 +155,79 @@ void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCS
     }
 }
 
+void HashTable2D::propogateHashTorus(const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, std::vector<std::pair<int, int>> allNeighborOrder) {
+    //############## Build the Grid Space ###############
+    // std::cout << "Making a plan in C-Space..." << std::endl;
+    // std::cout << "Cspace Bounds: x0->[" << grid_cspace.x0Bounds().first << ", " << grid_cspace.x0Bounds().second << "] x1->[" << grid_cspace.x1Bounds().first << ", " << grid_cspace.x1Bounds().second << "]" << std::endl;
+    // std::cout << "Cspace Size: (x0_cells, x1_cells)->(" << grid_cspace.size().first << ", " << grid_cspace.size().second << ")" << std::endl;
+
+    //Make a queue of nodes to visit
+    std::vector<HashNode> nodeQueue;
+
+    //Convert start and stop nodes to cell indices
+    HashNode goalNode(grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]), 2);
+
+    //Create a hashtable to keep track of visited nodes
+    std::cout << "Creating hashtable..." << std::endl;
+    nodeQueue.push_back(goalNode);
+
+
+    //Breadth first completion of cells
+    HashNode currentNode;
+    while(nodeQueue.size() > 0){
+
+        //Get the current node and pop from queue
+        currentNode = nodeQueue[0];
+        nodeQueue.erase(nodeQueue.begin());
+
+        //Take care of wrapping bounds
+        currentNode.key = std::make_pair((currentNode.key.first+grid_cspace.size().first) % grid_cspace.size().first, (currentNode.key.second+grid_cspace.size().second) % grid_cspace.size().second);
+
+        // //check if key exisits
+        if (getHeuristic(currentNode.key) <= currentNode.heuristic && getHeuristic(currentNode.key) != -1){
+            //If the node is in collision, remove it from the queue and continue
+            //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") already exists!" << std::endl;
+            continue;
+        }
+
+        
+        //Check if the current node is outside of the boundries
+        // if (currentNode.key.first >= grid_cspace.size().first || currentNode.key.first < 0 || currentNode.key.second >= grid_cspace.size().second || currentNode.key.second < 0){
+        //     //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is out of bounds!" << std::endl;
+        //     //If the node is outside of the boundries, remove it from the queue and continue
+        //     continue;
+        // }
+
+        //Check if the current node is in collision
+        if (grid_cspace.operator()(currentNode.key.first, currentNode.key.second)){
+            //If the node is in collision, remove it from the queue and continue
+            //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is in collision!" << std::endl;
+            currentNode.heuristic = 1;
+            addToHashTable(currentNode);
+            continue;
+        }
+
+        //Add the node to the hashtable
+        addToHashTable(currentNode);
+
+        //Add all neighbors to the queue
+        for (int i = 0; i < allNeighborOrder.size(); i++){
+            //Get the neighbor index
+            std::pair<int, int> neighborIndex = std::make_pair(currentNode.key.first + allNeighborOrder[i].first, currentNode.key.second + allNeighborOrder[i].second);
+
+            //Check if the neighbor is in the hashtable
+            // if (hash.getHeuristic(neighborIndex) != -1){
+            //     //If the neighbor is in the hashtable, continue
+            //     continue;
+            // }
+
+            //Add the neighbor to the queue
+            nodeQueue.push_back(HashNode(neighborIndex, currentNode.heuristic+1));
+        }
+
+    }
+}
+
 HashNode HashTable2D::traverseHash(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder){
 
     //print current node
@@ -165,6 +238,53 @@ HashNode HashTable2D::traverseHash(HashNode q, std::vector<std::pair<int, int>> 
     for (int i = 0; i < allNeighborOrder.size(); i++){
         //Get the neighbor index
         std::pair<int, int> neighborIndex = std::make_pair(q.key.first + allNeighborOrder[i].first, q.key.second + allNeighborOrder[i].second);
+
+        //Check if the neighbor is in the hashtable or a collision
+        if (getHeuristic(neighborIndex) == -1 || getHeuristic(neighborIndex) == 1){
+            //If the neighbor is in the hashtable, continue
+            continue;
+        }
+
+        //Add the neighbor to the queue
+        neighbors.push_back(HashNode(neighborIndex, getHeuristic(neighborIndex)));
+    }
+
+    //Find the neighbor with the smallest heuristic
+    HashNode smallestNeighbor;
+    for (int i = 0; i < neighbors.size(); i++){
+        //print neighbor node:
+        //std::cout << "Neighbor " << i << ": ";
+        //neighbors[i].print();
+
+        //Check if the neighbor is the smallest distance
+        if (neighbors[i].heuristic <= smallestNeighbor.heuristic || smallestNeighbor.heuristic == -1){
+            smallestNeighbor = neighbors[i];
+        }
+    }
+
+    if (smallestNeighbor.heuristic == -1){
+        std::cout << "No neighbors found!" << std::endl;
+        return smallestNeighbor;
+    }
+
+    // std::cout << "Smallest Neighbor: ";
+    // smallestNeighbor.print();
+    // std::cout << std::endl;
+
+    //Return the smallest neighbor
+    return smallestNeighbor;
+}
+
+HashNode HashTable2D::traverseHashTorus(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder, const amp::GridCSpace2D& grid_cspace){
+
+    //print current node
+    //q.print();
+
+    //Get the neighbors of the node
+    std::vector<HashNode> neighbors;
+    for (int i = 0; i < allNeighborOrder.size(); i++){
+        //Get the neighbor index
+        std::pair<int, int> neighborIndex = std::make_pair((q.key.first + allNeighborOrder[i].first + grid_cspace.size().first)%grid_cspace.size().first, (q.key.second + allNeighborOrder[i].second+grid_cspace.size().second)%grid_cspace.size().second);
 
         //Check if the neighbor is in the hashtable or a collision
         if (getHeuristic(neighborIndex) == -1 || getHeuristic(neighborIndex) == 1){

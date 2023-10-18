@@ -200,10 +200,10 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
             }
 
             //Propogate the hash table
-            hash.propogateHash(q_goal, grid_cspace, allNeighborOrder);
+            hash.propogateHashTorus(q_goal, grid_cspace, allNeighborOrder);
 
             //Print the hashtable
-            //hash.printHashTable();
+            hash.printHashTable();
 
             //################# Build the path #################
             amp::Path2D path;
@@ -211,11 +211,15 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
             //std::vector<double> startingState = 
             //std::pair<double, double> startIndex = std::make_pair(q_init[0], q_init[1]);
             std::pair<int, int> startIndex = grid_cspace.getCellFromPoint(q_init[0], q_init[1]);
+            std::pair<int, int> goalIndex = grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]);
 
             //print the initial position and startIndex
             std::cout << "Initial position: (" << q_init[0] << ", " << q_init[1] << ")" << std::endl;
             std::cout << "Start index: (" << startIndex.first << ", " << startIndex.second << ")" << std::endl;
 
+            //print out the goal position and index
+            std::cout << "Goal position: (" << q_goal[0] << ", " << q_goal[1] << ")" << std::endl;
+            std::cout << "Goal index: (" << goalIndex.first << ", " << goalIndex.second << ")" << std::endl;
             //Start the path descent from the start node
             path.waypoints.push_back(q_init);
 
@@ -223,10 +227,10 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
 
             while (q.heuristic > 2){
                 //Get the next node
-                q = hash.traverseHash(q, allNeighborOrder);
+                q = hash.traverseHashTorus(q, allNeighborOrder, grid_cspace);
 
                 //print current angles
-                std::cout << "Angles-> (" << q.key.first << ", " << q.key.second << ")" << std::endl << std::endl;
+                //std::cout << "Angles-> (" << q.key.first << ", " << q.key.second << ")" << std::endl << std::endl;
 
                 //Add the node to the path
                 path.waypoints.push_back(hash.getPosFromKey(q.key, grid_cspace));
@@ -248,7 +252,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {false, false, false};
+    std::vector<bool> run = {false, false, true};
 
     // ############ Exercise 1a ###############
     // Create a CSpace object with grid size of 0.25 for HW2 
@@ -289,33 +293,30 @@ int main(int argc, char** argv) {
     }
 
     //################# Exercise 2 #################//
+    //Create the link manipulator
+    std::vector<double> linkLengths = {1.0, 1.0};
+    LinkMan manipulator = LinkMan(linkLengths);
+    CSpaceConstructor constructor = CSpaceConstructor();
+    //Run WaveFront
+    MyManipWFAlgo manipWF = MyManipWFAlgo();
+
     if (run[2]){
-        std::cout << "Starting Problem 2: " << std::endl;
+        std::cout << "Starting Problem 2a: " << std::endl;
 
         //Create the environment
-        amp::Problem2D env3a = HW6::getHW4Problem1();
-        //std::vector<Eigen::Vector2d> v = {Eigen::Vector2d(1.0, 1.0), Eigen::Vector2d(-1.0, 1.0), Eigen::Vector2d(-1.0, -1.0), Eigen::Vector2d(1.0, -1.0)};
-        //env3a.obstacles.push_back(amp::Obstacle2D(v));
-        amp::Environment2D env3b = amp::HW4::getEx3Workspace2();
-        amp::Environment2D env3c = amp::HW4::getEx3Workspace3();
+        amp::Problem2D problem = HW6::getHW4Problem1();
 
-        //Create the link manipulator
-        std::vector<double> linkLengths3a = {1.0, 1.0};
-        LinkMan manipulator3a = LinkMan(linkLengths3a);
-        CSpaceConstructor constructor = CSpaceConstructor();
+        // Get the initial state from IK
+        amp::ManipulatorState init_state = manipulator.getConfigurationFromIK(problem.q_init);
 
-        //Run WaveFront
-        MyManipWFAlgo manipWF = MyManipWFAlgo();
+            // Get the goal state from IK
+        amp::ManipulatorState goal_state = manipulator.getConfigurationFromIK(problem.q_goal);
 
         // Make a path
-        amp::Path2D path3a = manipWF.planInCSpace(env3a.q_init, env3a.q_goal, *constructor.construct(manipulator3a, env3a));
-        Visualizer::makeFigure(env3a, path3a);
+        amp::Path2D path = manipWF.planInCSpace(convert(init_state), convert(goal_state), *constructor.construct(manipulator, problem));
+        Visualizer::makeFigure(problem, path);
 
-
-
-        amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3a));
-        //amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3b));
-        //amp::Visualizer::makeFigure(*constructor.construct(manipulator3a, env3c));
+        amp::Visualizer::makeFigure(*constructor.construct(manipulator, problem), path);
     }
 
     //Show figures

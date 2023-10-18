@@ -25,9 +25,11 @@ class HashTable2D{
         bool checkIfKeyExists(std::pair<int,int> key);
 
         void propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, std::vector<std::pair<int, int>> allNeighborOrder);
+        void propogateHashTorus(const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, std::vector<std::pair<int, int>> allNeighborOrder);
 
         Eigen::Vector2d getPosFromKey(std::pair<int, int> key, const amp::GridCSpace2D& grid_cspace);
         HashNode traverseHash(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder);
+        HashNode traverseHashTorus(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder, const amp::GridCSpace2D& grid_cspace);
 
 
         //clear hash table

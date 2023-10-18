@@ -19,6 +19,10 @@ std::unique_ptr<amp::GridCSpace2D> CSpaceConstructor::construct(const amp::LinkM
     double x0_step = (x0_max - x0_min)/m_x0_cells;
     double x1_step = (x1_max - x1_min)/m_x1_cells;
 
+    std::cout << "x0_cells: " << x0_cells << " x1_cells: " << x1_cells << std::endl;
+    std::cout << "x0_min: " << x0_min << " x0_max: " << x0_max << std::endl;
+    std::cout << "x1_min: " << x1_min << " x1_max: " << x1_max << std::endl << std::endl;
+
     
     //Check in bounds for theta 1
     for (int i = 0; i < x0_cells; i++){
