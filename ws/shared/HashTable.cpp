@@ -14,6 +14,10 @@ HashNode::HashNode() {
     this->heuristic = -1;
 }
 
+void HashNode::print() {
+    std::cout << "Key: (" << this->key.first << ", " << this->key.second << ") Value: " << this->heuristic << std::endl;
+}
+
 void HashTable2D::addToHashTable(std::pair<int,int> key, int heuristic) {
     // Check if the pair (i, j) already exists in the hash table
     auto it = hashTable.find(key);
@@ -79,4 +83,133 @@ bool HashTable2D::checkIfKeyExists(std::pair<int,int> key) {
         // If the pair does not exist, return false
         return false;
     }
+}
+
+void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace, std::vector<std::pair<int, int>> allNeighborOrder) {
+    //############## Build the Grid Space ###############
+    // std::cout << "Making a plan in C-Space..." << std::endl;
+    // std::cout << "Cspace Bounds: x0->[" << grid_cspace.x0Bounds().first << ", " << grid_cspace.x0Bounds().second << "] x1->[" << grid_cspace.x1Bounds().first << ", " << grid_cspace.x1Bounds().second << "]" << std::endl;
+    // std::cout << "Cspace Size: (x0_cells, x1_cells)->(" << grid_cspace.size().first << ", " << grid_cspace.size().second << ")" << std::endl;
+
+    //Make a queue of nodes to visit
+    std::vector<HashNode> nodeQueue;
+
+    //Convert start and stop nodes to cell indices
+    HashNode goalNode(grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]), 2);
+
+    //Create a hashtable to keep track of visited nodes
+    std::cout << "Creating hashtable..." << std::endl;
+    nodeQueue.push_back(goalNode);
+
+
+    //Breadth first completion of cells
+    HashNode currentNode;
+    while(nodeQueue.size() > 0){
+
+        //Get the current node and pop from queue
+        currentNode = nodeQueue[0];
+        nodeQueue.erase(nodeQueue.begin());
+
+        //check if key exisits
+        if (checkIfKeyExists(currentNode.key)){
+            //If the node is in collision, remove it from the queue and continue
+            //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") already exists!" << std::endl;
+            continue;
+        }
+        
+        //Check if the current node is outside of the boundries
+        if (currentNode.key.first >= grid_cspace.size().first || currentNode.key.first < 0 || currentNode.key.second >= grid_cspace.size().second || currentNode.key.second < 0){
+            //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is out of bounds!" << std::endl;
+            //If the node is outside of the boundries, remove it from the queue and continue
+            continue;
+        }
+
+        //Check if the current node is in collision
+        if (grid_cspace.operator()(currentNode.key.first, currentNode.key.second)){
+            //If the node is in collision, remove it from the queue and continue
+            std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is in collision!" << std::endl;
+            currentNode.heuristic = 1;
+            addToHashTable(currentNode);
+            continue;
+        }
+
+        //Add the node to the hashtable
+        addToHashTable(currentNode);
+
+        //Add all neighbors to the queue
+        for (int i = 0; i < allNeighborOrder.size(); i++){
+            //Get the neighbor index
+            std::pair<int, int> neighborIndex = std::make_pair(currentNode.key.first + allNeighborOrder[i].first, currentNode.key.second + allNeighborOrder[i].second);
+
+            //Check if the neighbor is in the hashtable
+            // if (hash.getHeuristic(neighborIndex) != -1){
+            //     //If the neighbor is in the hashtable, continue
+            //     continue;
+            // }
+
+            //Add the neighbor to the queue
+            nodeQueue.push_back(HashNode(neighborIndex, currentNode.heuristic+1));
+        }
+
+    }
+}
+
+HashNode HashTable2D::traverseHash(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder){
+
+    //print current node
+    q.print();
+
+    //Get the neighbors of the node
+    std::vector<HashNode> neighbors;
+    for (int i = 0; i < allNeighborOrder.size(); i++){
+        //Get the neighbor index
+        std::pair<int, int> neighborIndex = std::make_pair(q.key.first + allNeighborOrder[i].first, q.key.second + allNeighborOrder[i].second);
+
+        //Check if the neighbor is in the hashtable or a collision
+        if (getHeuristic(neighborIndex) == -1 || getHeuristic(neighborIndex) == 1){
+            //If the neighbor is in the hashtable, continue
+            continue;
+        }
+
+        //Add the neighbor to the queue
+        neighbors.push_back(HashNode(neighborIndex, getHeuristic(neighborIndex)));
+    }
+
+    //Find the neighbor with the smallest heuristic
+    HashNode smallestNeighbor;
+    for (int i = 0; i < neighbors.size(); i++){
+        //print neighbor node:
+        std::cout << "Neighbor " << i << ": ";
+        neighbors[i].print();
+        if (neighbors[i].heuristic < smallestNeighbor.heuristic || smallestNeighbor.heuristic == -1){
+            smallestNeighbor = neighbors[i];
+        }
+    }
+
+    std::cout << "Smallest Neighbor: ";
+    smallestNeighbor.print();
+    std::cout << std::endl;
+
+    //Return the smallest neighbor
+    return smallestNeighbor;
+}
+
+Eigen::Vector2d HashTable2D::getPosFromKey(std::pair<int, int> key, const amp::GridCSpace2D& grid_cspace) {
+    //Get the bounds of the cspace
+    std::pair<double, double> x0_bounds = grid_cspace.x0Bounds();
+    std::pair<double, double> x1_bounds = grid_cspace.x1Bounds();
+
+    //Get the size of the cspace
+    std::pair<std::size_t, std::size_t> cspace_size = grid_cspace.size();
+
+    //Calculate the step size for each dimension
+    double x0_step = (x0_bounds.second - x0_bounds.first)/cspace_size.first;
+    double x1_step = (x1_bounds.second - x1_bounds.first)/cspace_size.second;
+
+    //Calculate the position from the key
+    Eigen::Vector2d pos;
+    pos[0] = x0_bounds.first + key.first*x0_step;
+    pos[1] = x1_bounds.first + key.second*x1_step;
+
+    return pos;
 }

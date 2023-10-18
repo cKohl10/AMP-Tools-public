@@ -25,6 +25,7 @@ class MyGridCSpace : public amp::GridCSpace2D {
             std::size_t j = (x1 - m_x1_bounds.first)/x1_step;
 
             //Debuging:
+            std::cout << std::endl << "New getCellFromPoint() function called!" << std::endl;
             std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
             std::cout << "x0_step: " << x0_step << " x1_step: " << x1_step << std::endl;
             std::cout << "m_x0_bounds.first: " << m_x0_bounds.first << " m_x0_bounds.second: " << m_x0_bounds.second << std::endl;
@@ -124,76 +125,58 @@ class MyPointWFAlgo : public amp::PointWaveFrontAlgorithm {
 
         // You need to implement here
         virtual amp::Path2D planInCSpace(const Eigen::Vector2d& q_init, const Eigen::Vector2d& q_goal, const amp::GridCSpace2D& grid_cspace) override {
-            amp::Path2D path;
 
-            std::cout << "Making a plan in C-Space..." << std::endl;
-
-            //Build a graph starting from q_init keeping track of the distance traveled
-            //CellGraph graph(grid_cspace.getCellFromPoint(q_init[0], q_init[1]), grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]), grid_cspace);
-
-            //Make a queue of nodes to visit
-            std::vector<HashNode> nodeQueue;
-
-            //Convert start and stop nodes to cell indices
-            HashNode startNode(grid_cspace.getCellFromPoint(q_init[0], q_init[1]), 0);
-            HashNode goalNode(grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]), INT16_MAX);
-            nodeQueue.push_back(startNode);
-
-            //Get the edges of the workspace
-
+            //############## Build the Grid Space as a Hash Table ###############
+            HashTable2D hash;
 
             //Make the array of neighbors to visit
-            std::vector<std::pair<int, int>> edgeNeighborOrder;
             std::vector<std::pair<int, int>> allNeighborOrder;
-
-            //Initialize the neighbor order
-            allNeighborOrder.push_back(std::make_pair(0, 1));
-            allNeighborOrder.push_back(std::make_pair(1, 1));
-            allNeighborOrder.push_back(std::make_pair(1, 0));
-            allNeighborOrder.push_back(std::make_pair(1, -1));
-            allNeighborOrder.push_back(std::make_pair(0, -1));
-            allNeighborOrder.push_back(std::make_pair(-1, -1));
-            allNeighborOrder.push_back(std::make_pair(-1, 0));
-            allNeighborOrder.push_back(std::make_pair(-1, 1));
+            bool edgeNeighbor = false;
 
             //Initialize the edge neighbor order
-            edgeNeighborOrder.push_back(std::make_pair(0, 1));
-            edgeNeighborOrder.push_back(std::make_pair(1, 0));
-            edgeNeighborOrder.push_back(std::make_pair(0, -1));
-            edgeNeighborOrder.push_back(std::make_pair(-1, 0));
-
-            //Create a hashtable to keep track of visited nodes
-            std::cout << "Creating hashtable..." << std::endl;
-            // std::unordered_map<std::pair<int, int>, int> hashy;
-            hash.clearHashTable();
-            hash.addToHashTable(startNode);
-
-
-            //Breadth first completion of cells
-            HashNode currentNode;
-            while(nodeQueue.size() > 0){
-
-                //Get the current node and pop from queue
-                currentNode = nodeQueue[0];
-                nodeQueue.erase(nodeQueue.begin());
-                
-                //Check if the current node is outside of the boundries
-                // if (currentNode.key.first < grid_cspace. || currentNode.key.first >= grid_cspace.size().first || currentNode.key.second < 0 || currentNode.key.second >= grid_cspace.size().second){
-                //     //If the node is outside of the boundries, remove it from the queue
-                //     nodeQueue.erase(nodeQueue.begin());
-                //     continue;
-                // }
+            if(edgeNeighbor){
+                allNeighborOrder.push_back(std::make_pair(0, 1));
+                allNeighborOrder.push_back(std::make_pair(1, 0));
+                allNeighborOrder.push_back(std::make_pair(0, -1));
+                allNeighborOrder.push_back(std::make_pair(-1, 0));
+            } else{
+                //Initialize the neighbor order
+                allNeighborOrder.push_back(std::make_pair(0, 1));
+                allNeighborOrder.push_back(std::make_pair(1, 1));
+                allNeighborOrder.push_back(std::make_pair(1, 0));
+                allNeighborOrder.push_back(std::make_pair(1, -1));
+                allNeighborOrder.push_back(std::make_pair(0, -1));
+                allNeighborOrder.push_back(std::make_pair(-1, -1));
+                allNeighborOrder.push_back(std::make_pair(-1, 0));
+                allNeighborOrder.push_back(std::make_pair(-1, 1));
             }
+
+            //Propogate the hash table
+            hash.propogateHash(q_goal, grid_cspace, allNeighborOrder);
+
+            //Print the hashtable
             hash.printHashTable();
 
+            //################# Build the path #################
+            amp::Path2D path;
 
-            
+            std::pair<int, int> startIndex = grid_cspace.getCellFromPoint(q_init[0], q_init[1]);
+
+            //Start the path descent from the start node
+            path.waypoints.push_back(q_init);
+
+            HashNode q(startIndex, hash.getHeuristic(startIndex));
+
+            while (q.heuristic != 2){
+                //Get the next node
+                q = hash.traverseHash(q, allNeighborOrder);
+
+                //Add the node to the path
+                path.waypoints.push_back(hash.getPosFromKey(q.key, grid_cspace));
+            }
+
             return path;
         }
-
-        private:
-            //Create the hashtable
-            HashTable2D hash;
 };
 
 class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
