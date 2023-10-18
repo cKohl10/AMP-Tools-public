@@ -110,15 +110,15 @@ int main(int argc, char** argv) {
 
     //Create the figure
     //Visualize the environment and link manipulator
-    // amp::Visualizer::makeFigure(env3a, manipulator3a, state3a);
-    // amp::Visualizer::makeFigure(env3b, manipulator3a, state3a);
-    //amp::Visualizer::makeFigure(env3c, manipulator3a, state3a);
+    amp::Visualizer::makeFigure(env3a, manipulator3a, state3a);
+    amp::Visualizer::makeFigure(env3b, manipulator3a, state3a);
+    amp::Visualizer::makeFigure(env3c, manipulator3a, state3a);
     //amp::Visualizer::makeFigure(cspace3a);
 
     //Display all figures that have been made
     amp::Visualizer::showFigures();
 
     // Grade method
-    amp::HW4::grade<LinkMan>(constructor, "carson.kohlbrenner@colorado.edu", argc, argv);
+    //amp::HW4::grade<LinkMan>(constructor, "carson.kohlbrenner@colorado.edu", argc, argv);
     return 0;
 }

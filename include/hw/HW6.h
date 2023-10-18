@@ -49,6 +49,9 @@ class PointWaveFrontAlgorithm : public WaveFrontAlgorithm, public PointMotionPla
         /// @param problem A planning problem with workspace obstacles and init/goal end effector locations
         /// @return A sequence of ManipulatorStates that takes the manipulator from the q_init location to q_goal
         virtual amp::Path2D plan(const amp::Problem2D& problem) override {
+            //print a statement saying point wave front being graded
+            std::cout << "Point Wave Front being graded" << std::endl;
+
             // Construct the grid discretized workspace/cspace
             std::unique_ptr<amp::GridCSpace2D> grid_cspace = constructDiscretizedWorkspace(problem);
 
@@ -73,6 +76,8 @@ class ManipulatorWaveFrontAlgorithm : public WaveFrontAlgorithm, public LinkMani
         /// @return A sequence of ManipulatorStates that takes the manipulator from the q_init location to q_goal
         virtual amp::ManipulatorTrajectory2Link plan(const LinkManipulator2D& link_manipulator_agent, const amp::Problem2D& problem) override {
             ASSERT(link_manipulator_agent.nLinks() == 2, "Manipulator must have two links");
+
+            std::cout << "Manipulator Wave Front being graded" << std::endl;
 
             // Get the initial state from IK
             amp::ManipulatorState init_state = link_manipulator_agent.getConfigurationFromIK(problem.q_init);

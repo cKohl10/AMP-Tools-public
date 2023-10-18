@@ -131,3 +131,4 @@ Eigen::MatrixXd LinkMan::Tmatrix(double angle, double a) const{
          0, 0, 1;
     return T;
 }
+

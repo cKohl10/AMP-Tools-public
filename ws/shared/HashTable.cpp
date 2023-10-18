@@ -110,12 +110,13 @@ void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCS
         currentNode = nodeQueue[0];
         nodeQueue.erase(nodeQueue.begin());
 
-        //check if key exisits
-        if (checkIfKeyExists(currentNode.key)){
+        // //check if key exisits
+        if (getHeuristic(currentNode.key) <= currentNode.heuristic && getHeuristic(currentNode.key) != -1){
             //If the node is in collision, remove it from the queue and continue
             //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") already exists!" << std::endl;
             continue;
         }
+
         
         //Check if the current node is outside of the boundries
         if (currentNode.key.first >= grid_cspace.size().first || currentNode.key.first < 0 || currentNode.key.second >= grid_cspace.size().second || currentNode.key.second < 0){
@@ -127,7 +128,7 @@ void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCS
         //Check if the current node is in collision
         if (grid_cspace.operator()(currentNode.key.first, currentNode.key.second)){
             //If the node is in collision, remove it from the queue and continue
-            std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is in collision!" << std::endl;
+            //std::cout << "key  (" << currentNode.key.first << ", " << currentNode.key.second << ") is in collision!" << std::endl;
             currentNode.heuristic = 1;
             addToHashTable(currentNode);
             continue;
@@ -157,7 +158,7 @@ void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCS
 HashNode HashTable2D::traverseHash(HashNode q, std::vector<std::pair<int, int>> allNeighborOrder){
 
     //print current node
-    q.print();
+    //q.print();
 
     //Get the neighbors of the node
     std::vector<HashNode> neighbors;
@@ -179,16 +180,23 @@ HashNode HashTable2D::traverseHash(HashNode q, std::vector<std::pair<int, int>> 
     HashNode smallestNeighbor;
     for (int i = 0; i < neighbors.size(); i++){
         //print neighbor node:
-        std::cout << "Neighbor " << i << ": ";
-        neighbors[i].print();
-        if (neighbors[i].heuristic < smallestNeighbor.heuristic || smallestNeighbor.heuristic == -1){
+        //std::cout << "Neighbor " << i << ": ";
+        //neighbors[i].print();
+
+        //Check if the neighbor is the smallest distance
+        if (neighbors[i].heuristic <= smallestNeighbor.heuristic || smallestNeighbor.heuristic == -1){
             smallestNeighbor = neighbors[i];
         }
     }
 
-    std::cout << "Smallest Neighbor: ";
-    smallestNeighbor.print();
-    std::cout << std::endl;
+    if (smallestNeighbor.heuristic == -1){
+        std::cout << "No neighbors found!" << std::endl;
+        return smallestNeighbor;
+    }
+
+    // std::cout << "Smallest Neighbor: ";
+    // smallestNeighbor.print();
+    // std::cout << std::endl;
 
     //Return the smallest neighbor
     return smallestNeighbor;
