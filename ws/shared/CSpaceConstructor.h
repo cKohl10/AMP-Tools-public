@@ -12,3 +12,4 @@ class CSpaceConstructor : public amp::GridCSpace2DConstructor{
         /// @brief Checks all configurations for collision
         std::unique_ptr<amp::GridCSpace2D> construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env);
 };
+

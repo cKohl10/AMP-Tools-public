@@ -20,6 +20,8 @@ class CSpace : public amp::GridCSpace2D {
 
         bool inCollision(double x0, double x1) const;
 
+        std::pair<std::size_t, std::size_t> getCellFromPoint(double x0, double x1) const;
+
     private:
         bool collisionDetected(Eigen::Vector2d position) const;
         bool subdivide(Eigen::Vector2d b1, Eigen::Vector2d b2, int counter) const;
@@ -27,3 +29,4 @@ class CSpace : public amp::GridCSpace2D {
         const amp::LinkManipulator2D *m_robot;
         amp::Environment2D m_environment;
 };
+

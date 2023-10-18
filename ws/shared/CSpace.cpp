@@ -7,6 +7,19 @@ CSpace::CSpace(const amp::LinkManipulator2D& robot, const amp::Environment2D& en
     m_environment = environment;
 }
 
+std::pair<std::size_t, std::size_t> CSpace::getCellFromPoint(double x0, double x1) const{
+    //Calculate the step size for each dimension
+    double x0_step = (m_x0_bounds.second - m_x0_bounds.second)/size().first;
+    double x1_step = (m_x1_bounds.second - m_x1_bounds.second)/size().second;
+
+    //Calculate the cell indices
+    std::size_t i = (x0 - m_x0_bounds.first)/x0_step;
+    std::size_t j = (x1 - m_x1_bounds.first)/x1_step;
+
+    return std::make_pair(i, j);
+}
+
+
 //Checks the full link manipulator for collisions
 bool CSpace::inCollision(double x0, double x1) const{
 

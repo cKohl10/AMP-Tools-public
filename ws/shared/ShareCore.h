@@ -4,3 +4,5 @@
 #include "LinkMan.h"
 #include "PotentialPlanner.h"
 #include "RangeDetector.h"
+#include "CellGraph.h"
+#include "HashTable.h"

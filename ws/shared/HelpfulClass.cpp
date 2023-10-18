@@ -199,3 +199,58 @@ double pathDistance(amp::Path2D path){
     //std::cout << "The path distance is: " << distance << std::endl;
     return distance;
 }
+
+/// @brief This builds a union of primitives for each obstacle and compares the location of the point to the union
+/// @param position 
+/// @return False for no collision or True for collision
+bool collisionDetectedPoint(std::vector<amp::Obstacle2D> obstacles, Eigen::Vector2d position){
+    bool collisionCCW = false; //collision checker
+    bool collisionCW = false; //collision checker
+
+    // Access every obstacle
+    for (amp::Obstacle2D o : obstacles){
+        std::vector<Eigen::Vector2d> v = o.verticesCCW();
+        
+        //print object vertices v
+        //std::cout << std::endl << "Object " << counter << " vertices: " << v.size() <<std::endl;
+
+        collisionCCW = true;
+        collisionCW = true;
+
+        //std::cout << "Next Object:" << std::endl;
+
+        //Make a primitive for each obstacle
+        for (int j = 0; j < v.size(); j++){
+            if ((v[(j+1)%v.size()] - v[j]).norm() == 0.0){
+                //print if same vertices
+                //std::cout << "Same vertices" << std::endl;
+                continue;
+            }
+
+            //Eigen::ParametrizedLine<double, 2> line(v[j], v[(j+1)%v.size()] - v[j]);
+            //Eigen::Vector2d normal(line.direction()[1], -line.direction()[0]);
+
+            Eigen::Vector2d edgeVec = v[(j+1)%v.size()] - v[j];
+            Eigen::Vector2d posVec = position - v[j];
+            //Eigen::Vector2d normal = rotateVec2d(vec, M_PI/2.0);
+
+            //std::cout << "For edge: (" << v[j+1](0) << ", " << v[j+1](1) << ") and (" << v[j](0) << ", " << v[j](1) << ")" << std::endl;
+            //std::cout << "The dot product of the normal vector (" << normal[0] << ", " << normal[1] << ") and the arbitrary vector (" << position[0]-v[j](0) << ", " << position[1]-v[j](1) << ") is " << normal.dot(position- v[j]) << std::endl;
+
+            collisionCCW = collisionCCW && (edgeVec.dot(posVec) <= 0); 
+            collisionCW = collisionCW && (edgeVec.dot(posVec) > 0); 
+        }
+
+        //std::cout << std::endl;
+
+        // finsh the loop
+    
+
+        if (collisionCCW || collisionCW){
+            //std::cout << "Collision!" << std::endl;
+            return true;
+        }
+    }
+
+    return false;
+}
