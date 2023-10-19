@@ -6,6 +6,10 @@
 
 // Include any custom headers you created in your workspace
 #include "MyBugAlgorithm.h"
+#include "Bug1.h"
+#include "Bug2.h"
+#include "helperFunc.h"
+#include "PolyGraph.h"
 
 using namespace amp;
 
@@ -16,9 +20,9 @@ int main(int argc, char** argv) {
     /*    Randomly generate the problem     */ 
 
     // Use WO1 from Exercise 2
-    Problem2D problem = HW2::getWorkspace1();
+    Problem2D problem = HW2::getWorkspace2();
 
-    // Use WO1 from Exercise 2
+    // Use WO2 from Exercise 2
     /*
     Problem2D problem = HW2::getWorkspace2();
     */
@@ -34,9 +38,11 @@ int main(int argc, char** argv) {
     //Randomly generate the environment;
     Problem2D problem = EnvironmentTools::generateRandom(spec); // Random environment
     */
+    //problem = fixOverlappingPolygons(problem);
 
     // Declare your algorithm object 
-    MyBugAlgorithm algo;
+    //MyBugAlgorithm algo;
+    Bug1 algo;
     
     {
         // Call your algorithm on the problem
@@ -67,13 +73,7 @@ int main(int argc, char** argv) {
 
     Visualizer::showFigures();
 
-    HW2::grade(algo, "nonhuman.biologic@myspace.edu", argc, argv);
-    
-    /* If you want to reconstruct your bug algorithm object every trial (to reset member variables from scratch or initialize), use this method instead*/
-    //HW2::grade<MyBugAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv, constructor_parameter_1, constructor_parameter_2, etc...);
-    
-    // This will reconstruct using the default constructor every trial
-    //HW2::grade<MyBugAlgorithm>("nonhuman.biologic@myspace.edu", argc, argv);
+    HW2::grade(algo, "carson.kohlbrenner@colorado.edu", argc, argv);
 
     return 0;
 }
