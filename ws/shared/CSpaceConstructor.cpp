@@ -8,10 +8,10 @@ std::unique_ptr<amp::GridCSpace2D> CSpaceConstructor::construct(const amp::LinkM
     std::size_t x1_cells = 100; 
     double m_x0_cells = 100.0;
     double m_x1_cells = 100.0;
-    double x0_min = 0; 
-    double x0_max = 2*M_PI; 
-    double x1_min = 0; 
-    double x1_max = 2*M_PI; 
+    double x0_min = -M_PI; 
+    double x0_max = M_PI; 
+    double x1_min = -M_PI; 
+    double x1_max = M_PI; 
 
     std::unique_ptr<CSpace> cspace(new CSpace(manipulator, env, x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max));
 

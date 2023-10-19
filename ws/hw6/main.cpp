@@ -204,7 +204,7 @@ class MyManipWFAlgo : public amp::ManipulatorWaveFrontAlgorithm {
             hash.propogateHashTorus(q_goal, grid_cspace, allNeighborOrder);
 
             //Print the hashtable
-            hash.printHashTable();
+            //hash.printHashTable();
 
             //################# Build the path #################
             amp::Path2D path;
@@ -287,6 +287,8 @@ class MyAStarAlgo : public amp::AStar {
 
                 //Get the current node
                 AstarNode* parent = O.back();
+
+                std::cout << "Processing Node " << parent->node << std::endl;
 
                 //remove it from priority queue
                 O.pop_back();
