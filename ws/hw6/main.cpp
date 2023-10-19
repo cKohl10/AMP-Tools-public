@@ -288,7 +288,7 @@ class MyAStarAlgo : public amp::AStar {
                 //Get the current node
                 AstarNode* parent = O.back();
 
-                std::cout << "Processing Node " << parent->node << std::endl;
+                //std::cout << "Processing Node " << parent->node << std::endl;
 
                 //remove it from priority queue
                 O.pop_back();
