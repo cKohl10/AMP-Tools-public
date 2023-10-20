@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {false, true, true};
+    std::vector<bool> run = {true, false, false};
 
     // ############ Exercise 1a ###############
     // Create a CSpace object with grid size of 0.25 for HW2 
@@ -177,6 +177,6 @@ int main(int argc, char** argv) {
     //Show figures
     Visualizer::showFigures();
 
-    //amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("carson.kohlbrenner@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple("hey therre"), std::make_tuple());
+    amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("carson.kohlbrenner@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple("hey therre"), std::make_tuple());
     return 0;
 }

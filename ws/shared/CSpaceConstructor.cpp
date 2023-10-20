@@ -4,7 +4,7 @@
 std::unique_ptr<amp::GridCSpace2D> CSpaceConstructor::construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env){
 
     //Create the C-Space parameters
-    double stepSize = 2;
+    double stepSize = 0.5;
     std::size_t x0_cells = 100*stepSize; 
     std::size_t x1_cells = 100*stepSize; 
     double m_x0_cells = 100*stepSize;

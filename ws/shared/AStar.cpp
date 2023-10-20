@@ -1,4 +1,5 @@
 #include "Astar.h"
+#include <queue>
 
 AstarNode::AstarNode(amp::Node node, double edgeWeightFromStart, double heuristic, double edgeWeightFromParent, AstarNode* parent, std::vector<AstarNode*> children)
         : node(node), edgeWeightFromStart(edgeWeightFromStart), heuristic(heuristic), edgeWeightFromParent(edgeWeightFromParent), parent(parent), children(children) {}
@@ -7,10 +8,17 @@ AstarNode::AstarNode(amp::Node node, double edgeWeightFromStart, double heuristi
 //     return GraphSearchResult();
 // }
 
+struct CompareAstarNode{
+    bool operator()(AstarNode* const& n1, AstarNode* const& n2){
+        return n1->edgeWeightFromStart + n1->heuristic > n2->edgeWeightFromStart + n2->heuristic;
+    }
+};
+
 MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) {
     
     //Create Priority List
-    std::vector<AstarNode*> O;
+    //std::vector<AstarNode*> O;
+    std::priority_queue<AstarNode*, std::vector<AstarNode*>, CompareAstarNode> O;
 
     //Processed List
     //std::vector<AstarNode*> C;
@@ -20,7 +28,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     AstarNode* initNode = new AstarNode(problem.init_node, 0, heuristic(problem.init_node), 0, nullptr, std::vector<AstarNode*>());
 
     //Push intial node to priority list
-    O.push_back(initNode);
+    O.push(initNode);
 
     //Make a counter to determine the number of iterations to solve
     int counter = 1;
@@ -37,12 +45,12 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
         // std::cout << "#########################" << std::endl <<std::endl;
 
         //Get the current node
-        AstarNode* parent = O.back();
+        AstarNode* parent = O.top();
 
         //std::cout << "Processing Node " << parent->node << std::endl;
 
         //remove it from priority queue
-        O.pop_back();
+        O.pop();
         parent->processed = true;
         
         //Add the parent node to the processed map
@@ -77,26 +85,26 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
             auto it = C.find(children[i]);
             if (it != C.end()) {
                 // If the node exists, check the next child
-                //std::cout << " ---> Child was already processed!" << std::endl;
+                // std::cout << " ---> Child was already processed!" << std::endl;
                 continue;
             }
 
             //Debugging
-            //std::cout << "Child: " << children[i] << std::endl;
-            //std::cout << "Edge: " << edges[i] << std::endl;
+            // std::cout << "Child: " << children[i] << std::endl;
+            // std::cout << "Edge: " << edges[i] << std::endl;
 
 
             //Create child node and add to parent children path
             AstarNode* child = new AstarNode(children[i], parent->edgeWeightFromStart + edges[i], heuristic(children[i]), edges[i], parent, std::vector<AstarNode*>());
-            parent->children.push_back(child);
+            //parent->children.push_back(child);
 
             // Add the child to the priority queue
-            O.push_back(child);
+            O.push(child);
 
         };
 
         //Sort the priority queue by the cost
-        std::sort(O.begin(), O.end(), [](AstarNode* a, AstarNode* b) {return a->edgeWeightFromStart + a->heuristic > b->edgeWeightFromStart + b->heuristic;});
+        //std::sort(O.begin(), O.end(), [](AstarNode* a, AstarNode* b) {return a->edgeWeightFromStart + a->heuristic > b->edgeWeightFromStart + b->heuristic;});
 
         //Add the iteration to the counter
         counter++;
