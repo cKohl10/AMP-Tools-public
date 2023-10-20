@@ -17,12 +17,12 @@ std::pair<std::size_t, std::size_t> CSpace::getCellFromPoint(double x0, double x
     std::size_t j = (x1 - m_x1_bounds.first)/x1_step;
 
     //Debuging:
-    std::cout << std::endl << "New getCellFromPoint() function called!" << std::endl;
-    std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
-    std::cout << "x0_step: " << x0_step << " x1_step: " << x1_step << std::endl;
-    std::cout << "m_x0_bounds.first: " << m_x0_bounds.first << " m_x0_bounds.second: " << m_x0_bounds.second << std::endl;
-    std::cout << "m_x1_bounds.first: " << m_x1_bounds.first << " m_x1_bounds.second: " << m_x1_bounds.second << std::endl;
-    std::cout << "i: " << i << " j: " << j << std::endl << std::endl;
+    // std::cout << std::endl << "New getCellFromPoint() function called!" << std::endl;
+    // std::cout << "x0: " << x0 << " x1: " << x1 << std::endl;
+    // std::cout << "x0_step: " << x0_step << " x1_step: " << x1_step << std::endl;
+    // std::cout << "m_x0_bounds.first: " << m_x0_bounds.first << " m_x0_bounds.second: " << m_x0_bounds.second << std::endl;
+    // std::cout << "m_x1_bounds.first: " << m_x1_bounds.first << " m_x1_bounds.second: " << m_x1_bounds.second << std::endl;
+    // std::cout << "i: " << i << " j: " << j << std::endl << std::endl;
 
     return std::make_pair(i, j);
 }

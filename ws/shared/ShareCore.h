@@ -1,3 +1,5 @@
+
+
 #include "CSpace.h"
 #include "CSpaceConstructor.h"
 #include "HelpfulClass.h"
@@ -6,3 +8,5 @@
 #include "RangeDetector.h"
 #include "CellGraph.h"
 #include "HashTable.h"
+#include "WaveFront.h"
+#include "Astar.h"

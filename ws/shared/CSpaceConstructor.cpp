@@ -4,10 +4,11 @@
 std::unique_ptr<amp::GridCSpace2D> CSpaceConstructor::construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env){
 
     //Create the C-Space parameters
-    std::size_t x0_cells = 100; 
-    std::size_t x1_cells = 100; 
-    double m_x0_cells = 100.0;
-    double m_x1_cells = 100.0;
+    double stepSize = 2;
+    std::size_t x0_cells = 100*stepSize; 
+    std::size_t x1_cells = 100*stepSize; 
+    double m_x0_cells = 100*stepSize;
+    double m_x1_cells = 100*stepSize;
     double x0_min = -M_PI; 
     double x0_max = M_PI; 
     double x1_min = -M_PI; 
@@ -19,9 +20,9 @@ std::unique_ptr<amp::GridCSpace2D> CSpaceConstructor::construct(const amp::LinkM
     double x0_step = (x0_max - x0_min)/m_x0_cells;
     double x1_step = (x1_max - x1_min)/m_x1_cells;
 
-    std::cout << "x0_cells: " << x0_cells << " x1_cells: " << x1_cells << std::endl;
-    std::cout << "x0_min: " << x0_min << " x0_max: " << x0_max << std::endl;
-    std::cout << "x1_min: " << x1_min << " x1_max: " << x1_max << std::endl << std::endl;
+    //std::cout << "x0_cells: " << x0_cells << " x1_cells: " << x1_cells << std::endl;
+    //std::cout << "x0_min: " << x0_min << " x0_max: " << x0_max << std::endl;
+    //std::cout << "x1_min: " << x1_min << " x1_max: " << x1_max << std::endl << std::endl;
 
     
     //Check in bounds for theta 1

@@ -98,7 +98,7 @@ void HashTable2D::propogateHash(const Eigen::Vector2d& q_goal, const amp::GridCS
     HashNode goalNode(grid_cspace.getCellFromPoint(q_goal[0], q_goal[1]), 2);
 
     //Create a hashtable to keep track of visited nodes
-    std::cout << "Creating hashtable..." << std::endl;
+    //std::cout << "Creating hashtable..." << std::endl;
     nodeQueue.push_back(goalNode);
 
 
