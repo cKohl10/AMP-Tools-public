@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {true, false, false};
+    std::vector<bool> run = {true, true, true};
 
     // ############ Exercise 1a ###############
     // Create a CSpace object with grid size of 0.25 for HW2 
