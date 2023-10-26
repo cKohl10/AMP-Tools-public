@@ -5,7 +5,7 @@ PRMAlgo::PRMAlgo(int n, double r, const amp::Problem2D& problem, Eigen::Vector2d
 void PRMAlgo::populateMap() {
 
     //Sample random node locations and add them to the node vector if they are collision free
-    for (int i = 0; i < n; i++) {
+    for (amp::Node i = 0; i < n; i++) {
         //Sample random node location
         double x = amp::randomDouble(xbounds.first, xbounds.second);
         double y = amp::randomDouble(ybounds.first, ybounds.second);
