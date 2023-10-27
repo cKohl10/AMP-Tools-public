@@ -4,33 +4,55 @@
 #include "AMPCore.h"
 #include "hw/HW7.h"
 
+class PointCollisionChecker2D : amp::ConfigurationSpace {
+    public:
+        PointCollisionChecker2D(const Eigen::VectorXd& lower_bounds, const Eigen::VectorXd& upper_bounds, const amp::Environment2D* environment);
+
+        // Returns false if the point is not in collision
+        virtual bool inCollision(const Eigen::VectorXd& state) const override;
+
+    private:
+        const amp::Environment2D *m_environment;
+
+};
+
+
 struct PRMNode{
-    Eigen::Vector2d position;
+    amp::Node node_num;
+    Eigen::VectorXd position;
     std::vector<PRMNode*> neighbors;
 };
 
-class PRMAlgo : public amp::PRM {
+class GenericPRM {
     public:
+        /// @brief Solves a path for a generic N-dimension prm problem
+        /// @param init_state 
+        /// @param goal_state 
+        /// @param collision_checker 
+        /// @return 
+        amp::Path planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker2D* collision_checker);
 
-        PRMAlgo(int n, double r, const amp::Problem2D& problem, Eigen::Vector2d q_start, Eigen::Vector2d q_goal, std::pair<double, double> xbounds, std::pair<double, double> ybounds);
+        //amp::Path planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker* collision_checker);
 
-        //Takes in a problem and a heuristic and returns a GraphSearchResult
-        //virtual amp::Path2D plan(const amp::Problem2D& problem) override;
-            
-        //Print out the final path found
-        //void printPath(AstarNode* node);
+    public:
+        std::vector<Eigen::Vector2d> bounds;
+        int n; //Number of samples
+        double r; //Radius of neighborhood
+};
 
-        void populateMap();
+class PRMAlgo2D : public amp::PRM2D, public GenericPRM {
+    public:
+        PRMAlgo2D();
 
-    private:
-        int n;
-        double r;
-        amp::Problem2D* problem_ptr;
-        Eigen::Vector2d q_start;
-        Eigen::Vector2d q_goal;
-        std::pair<double, double> xbounds
-        std::pair<double, double> ybounds
+        //Initialize with the Cspace bounds
+        PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds);
 
-        std::vector<PRMNode*> nodeList;
+        //Initialize with the Cspace bounds and the number of nodes to sample and the radius of the neighborhood
+        PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r);
+
+        //Plan a path in 2d using the members in problem
+        virtual amp::Path2D plan(const amp::Problem2D& problem) override;
+
+
 
 };

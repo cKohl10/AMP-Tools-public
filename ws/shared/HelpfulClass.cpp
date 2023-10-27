@@ -1,4 +1,5 @@
 #include "HelpfulClass.h"
+#include <random>
 
 
 
@@ -253,4 +254,11 @@ bool collisionDetectedPoint(std::vector<amp::Obstacle2D> obstacles, Eigen::Vecto
     }
 
     return false;
+}
+
+double randomDouble(double min, double max) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(min, max);
+    return dis(gen);
 }

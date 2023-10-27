@@ -1,5 +1,6 @@
 #include "AMPCore.h"
 #include "hw/HW7.h"
+#include "hw/HW5.h"
 #include "ShareCore.h"
 
 
@@ -14,6 +15,23 @@ int main(int argc, char** argv) {
     // ############ Exercise 1 ###############
     // Probablistic Roadmap
     if (run[0]){
+
+        //Get Problem 
+        amp::Problem2D problem = amp::HW5::getWorkspace1();
+
+        //Set the bounds of the problem
+        Eigen::Vector2d xbounds = {-1, 11};
+        Eigen::Vector2d ybounds = {-3, 3};
+
+        //Set the number of nodes to sample and the radius of the neighborhood
+        int n = 100;
+        double r = 1;
+
+        //Construct the problem
+        PRMAlgo2D prm_algo(xbounds, ybounds, n, r);
+
+        //Plan the path
+        prm_algo.plan(problem);
        
     }
 
@@ -23,9 +41,11 @@ int main(int argc, char** argv) {
        
     }
 
-    //Show figures
-    Visualizer::showFigures();
+    //amp::HW7::hint();
 
-    //amp::HW6::grade<MyPointWFAlgo, MyManipWFAlgo, MyAStarAlgo>("carson.kohlbrenner@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple("hey therre"), std::make_tuple());
+    //Show figures
+    //Visualizer::showFigures();
+
+    //amp::HW7::grade(prm_algo, rrt_algo, carson.kohlbrenner@colorado.edu, int argc, char** argv);
     return 0;
 }

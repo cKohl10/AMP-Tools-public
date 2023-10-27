@@ -1,5 +1,3 @@
-
-
 #include "CSpace.h"
 #include "CSpaceConstructor.h"
 #include "HelpfulClass.h"
@@ -10,3 +8,5 @@
 #include "HashTable.h"
 #include "WaveFront.h"
 #include "Astar.h"
+#include "PRM.h"
+#include "eigen3/Eigen/Core"
