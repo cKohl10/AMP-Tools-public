@@ -262,3 +262,21 @@ double randomDouble(double min, double max) {
     std::uniform_real_distribution<double> dis(min, max);
     return dis(gen);
 }
+
+bool lineCollisionDection2D(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, Eigen::Vector2d v1){
+    // Next, find if any of the vertices are in collision with any of the obstacles
+    for (int i = 0; i < o.size(); i++){
+
+        // get vertices current obstacle
+        std::vector<Eigen::Vector2d> obsVertices = o[i].verticesCCW();
+
+        // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
+        for (int j = 0; j < obsVertices.size(); j++){
+            // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
+            if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
+                return true;
+            }
+        }
+    }
+    return false;
+}

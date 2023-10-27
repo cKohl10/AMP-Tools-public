@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
         //Set the number of nodes to sample and the radius of the neighborhood
         int n = 200;
-        double r = 2;
+        double r = 1;
 
         //Construct the problem
         PRMAlgo2D prm_algo(xbounds, ybounds, n, r);

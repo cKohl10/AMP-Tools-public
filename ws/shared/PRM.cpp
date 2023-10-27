@@ -35,6 +35,7 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     //               << x.second.transpose() << std::endl;
     // }
 
+    //Connect the neighbors of each node
     for (auto const& x : node_map)
     {
         //Get the node number
@@ -56,7 +57,15 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
             if ((node_pos - neighbor_pos).norm() < r) {
 
                 //Check if there is a collision in the path between the two nodes
-                
+                //########## NOTE: CURRENTLY ONLY IMPLEMENTED FOR 2D ##############
+                //Convert the node positions to 2D vectors
+                Eigen::Vector2d node_pos2D = {node_pos[0], node_pos[1]};
+                Eigen::Vector2d neighbor_pos2D = {neighbor_pos[0], neighbor_pos[1]};
+                if (lineCollisionDection2D(collision_checker->getEnvironment()->obstacles, node_pos2D, neighbor_pos2D) == true){
+                    continue;
+                }
+                //##################################################################
+
                 //Add the edge to the graph
                 graph.connect(node_num, neighbor_num, (node_pos - neighbor_pos).norm());
             }
@@ -65,6 +74,9 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     }
 
     //graph.print();
+
+    //Find the shortest path
+    
 
     return path_nd;
 }
