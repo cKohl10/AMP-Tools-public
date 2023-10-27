@@ -1,7 +1,8 @@
 #include "AMPCore.h"
 #include "hw/HW7.h"
 #include "hw/HW5.h"
-#include "ShareCore.h"
+#include "PRM.h"
+//#include "ShareCore.h"
 
 
 using namespace amp;
@@ -24,8 +25,8 @@ int main(int argc, char** argv) {
         Eigen::Vector2d ybounds = {-3, 3};
 
         //Set the number of nodes to sample and the radius of the neighborhood
-        int n = 100;
-        double r = 1;
+        int n = 200;
+        double r = 2;
 
         //Construct the problem
         PRMAlgo2D prm_algo(xbounds, ybounds, n, r);
@@ -44,7 +45,7 @@ int main(int argc, char** argv) {
     //amp::HW7::hint();
 
     //Show figures
-    //Visualizer::showFigures();
+    Visualizer::showFigures();
 
     //amp::HW7::grade(prm_algo, rrt_algo, carson.kohlbrenner@colorado.edu, int argc, char** argv);
     return 0;

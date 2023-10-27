@@ -1,6 +1,6 @@
 #pragma once
 #include "AMPCore.h"
-#include "ShareCore.h"
+//#include "ShareCore.h"
 
 Eigen::Vector2d rotateVec2d(Eigen::Vector2d &vec, double angle);
 std::vector<Eigen::Vector2d> minStartReorder(std::vector<Eigen::Vector2d> &av);
