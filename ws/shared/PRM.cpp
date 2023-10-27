@@ -76,6 +76,14 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     //graph.print();
 
     //Find the shortest path
+    amp::ShortestPathProblem searchProblem;
+    searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
+    searchProblem.init_node = 0;
+    searchProblem.goal_node = 1;
+
+    //Traverse the graph
+    amp::AStar astar;
+    amp::GraphSearchResult result = astar.solve(searchProblem, heuristic);
     
 
     return path_nd;
@@ -85,6 +93,8 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
     std::cout << "Sampling Each Node..." << std::endl;
 
     int node_size = node_map[0].size();
+
+    Eigen::VectorXd goal_pos = node_map[1];
     //Sample n times and add the nodes to the node map
     for (amp::Node i = 2; i < n; i++) {
 
@@ -97,9 +107,16 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
         }
 
         //Check if the node is collision free
-        if (collision_checker->inCollision(q_rand) == false) {
-            node_map[i] = q_rand;
+        if (collision_checker->inCollision(q_rand) == true) {
+            continue;
         }
+
+        //Add node to map
+        node_map[i] = q_rand;
+
+        //Determine its heuristic value
+        heuristic.heuristic_values[i] = (q_rand-goal_pos).norm();
+
     }
 }
 

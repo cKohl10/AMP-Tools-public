@@ -3,6 +3,7 @@
 //#include "ShareCore.h"
 #include "AMPCore.h"
 #include "hw/HW7.h"
+#include "hw/HW6.h"
 #include "HelpfulClass.h"
 
 class PointCollisionChecker2D : amp::ConfigurationSpace {
@@ -17,13 +18,6 @@ class PointCollisionChecker2D : amp::ConfigurationSpace {
     private:
         const amp::Environment2D *m_environment;
 
-};
-
-
-struct PRMNode{
-    amp::Node node_num;
-    Eigen::VectorXd position;
-    std::vector<PRMNode*> neighbors;
 };
 
 class GenericPRM {
@@ -46,6 +40,8 @@ class GenericPRM {
 
         std::map<amp::Node, Eigen::VectorXd> node_map;
         amp::Graph<double> graph;
+
+        amp::LookupSearchHeuristic heuristic;
 };
 
 class PRMAlgo2D : public amp::PRM2D, public GenericPRM {
