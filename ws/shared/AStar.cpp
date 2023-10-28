@@ -8,6 +8,19 @@ AstarNode::AstarNode(amp::Node node, double edgeWeightFromStart, double heuristi
 //     return GraphSearchResult();
 // }
 
+void AstarNode::print(){
+    std::cout << "Node: " << node << std::endl;
+    std::cout << "Edge Weight From Start: " << edgeWeightFromStart << std::endl;
+    std::cout << "Heuristic: " << heuristic << std::endl;
+    std::cout << "Edge Weight From Parent: " << edgeWeightFromParent << std::endl;
+    std::cout << "Parent: " << parent << std::endl;
+    std::cout << "Children: ";
+    for (int i = 0; i < children.size(); i++){
+        std::cout << children[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
 struct CompareAstarNode{
     bool operator()(AstarNode* const& n1, AstarNode* const& n2){
         return n1->edgeWeightFromStart + n1->heuristic > n2->edgeWeightFromStart + n2->heuristic;
@@ -15,6 +28,8 @@ struct CompareAstarNode{
 };
 
 MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) {
+
+    std::cout << "Running A* Search..." << std::endl;
     
     //Create Priority List
     //std::vector<AstarNode*> O;
@@ -27,6 +42,9 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     //Start from initial Node
     AstarNode* initNode = new AstarNode(problem.init_node, 0, heuristic(problem.init_node), 0, nullptr, std::vector<AstarNode*>());
 
+    //Debugging
+    initNode->print();
+
     //Push intial node to priority list
     O.push(initNode);
 
@@ -35,14 +53,6 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
     //Repeat until prioirty list is exhausted
     while(O.size() > 0){
-
-        
-        //print the prioirty queue
-        // std::cout << std::endl << "#### Priority Queue ##### " << std::endl;
-        // for (int i = O.size()-1; i >= 0; i--){
-        //     std::cout <<"   Node " << O[i]->node << ": Cost " << O[i]->edgeWeightFromStart + O[i]->heuristic << std::endl;
-        // }
-        // std::cout << "#########################" << std::endl <<std::endl;
 
         //Get the current node
         AstarNode* parent = O.top();
@@ -114,6 +124,27 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     std::cout << "No path found!" << std::endl;
 
     return GraphSearchResult();
+}
+
+amp::Path MyAStarAlgo::searchPath(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic, std::map<amp::Node, Eigen::VectorXd> node_map){
+    
+    std::cout << "Running search before conversion..." << std::endl;
+    GraphSearchResult path_searchResult = search(problem, heuristic);
+
+    //Build the path
+    std::cout << "Beginning path conversion..." << std::endl;
+    amp::Path path;
+
+    //Loop through all the nodes
+    for (amp::Node x : path_searchResult.node_path){
+        //std::cout << "Iteration " << i << std::endl;
+    
+        //std::cout << "Adding node " << x << " to path" << std::endl;
+        //Add the node to the path
+        path.waypoints.push_back(node_map[x]);
+    }
+
+    return path;
 }
 
 void MyAStarAlgo::printPath(AstarNode* node){

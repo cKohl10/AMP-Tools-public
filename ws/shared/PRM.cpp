@@ -54,7 +54,7 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
             Eigen::VectorXd neighbor_pos = y.second;
 
             //Check if the node is within the neighborhood
-            if ((node_pos - neighbor_pos).norm() < r) {
+            if ((node_pos - neighbor_pos).norm() < r && node_num != neighbor_num) {
 
                 //Check if there is a collision in the path between the two nodes
                 //########## NOTE: CURRENTLY ONLY IMPLEMENTED FOR 2D ##############
@@ -76,16 +76,17 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     //graph.print();
 
     //Find the shortest path
+    std::cout << "Making Shortest Path Problem..." << std::endl;
     amp::ShortestPathProblem searchProblem;
     searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
     searchProblem.init_node = 0;
     searchProblem.goal_node = 1;
 
     //Traverse the graph
-    amp::AStar astar;
-    amp::GraphSearchResult result = astar.solve(searchProblem, heuristic);
+    std::cout << "Finding Shortest Path..." << std::endl;
+    MyAStarAlgo astar;
+    path_nd = astar.searchPath(searchProblem, heuristic, node_map);
     
-
     return path_nd;
 }
 
@@ -95,6 +96,11 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
     int node_size = node_map[0].size();
 
     Eigen::VectorXd goal_pos = node_map[1];
+
+    //Set the heuristics for goal and start
+    heuristic.heuristic_values[0] = 0;
+    heuristic.heuristic_values[1] = 0;
+
     //Sample n times and add the nodes to the node map
     for (amp::Node i = 2; i < n; i++) {
 
@@ -118,6 +124,11 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
         heuristic.heuristic_values[i] = (q_rand-goal_pos).norm();
 
     }
+
+    //print out heuristic map
+    // for (auto const& x : heuristic.heuristic_values){
+    //     std::cout << "Node " << x.first << " has heuristic value " << x.second << std::endl;
+    // }
 }
 
 PRMAlgo2D::PRMAlgo2D(){

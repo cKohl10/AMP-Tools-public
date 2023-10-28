@@ -13,6 +13,8 @@ struct AstarNode{
     AstarNode* parent;
     std::vector<AstarNode*> children;
     bool processed = false;
+
+    void print();
 };
 
 class MyAStarAlgo : public amp::AStar {
@@ -20,6 +22,13 @@ class MyAStarAlgo : public amp::AStar {
 
         //Takes in a problem and a heuristic and returns a GraphSearchResult
         virtual GraphSearchResult search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) override;
+
+        /// @brief Takes the results and turns to a path
+        /// @param problem 
+        /// @param heuristic 
+        /// @param node_map 
+        /// @return 
+        amp::Path searchPath(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic, std::map<amp::Node, Eigen::VectorXd> node_map);
             
         //Print out the final path found
         void printPath(AstarNode* node);

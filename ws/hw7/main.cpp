@@ -25,14 +25,16 @@ int main(int argc, char** argv) {
         Eigen::Vector2d ybounds = {-3, 3};
 
         //Set the number of nodes to sample and the radius of the neighborhood
-        int n = 200;
-        double r = 1;
+        int n = 2000;
+        double r = 0.5;
 
         //Construct the problem
         PRMAlgo2D prm_algo(xbounds, ybounds, n, r);
 
         //Plan the path
-        prm_algo.plan(problem);
+        amp::Path2D path = prm_algo.plan(problem);
+
+        amp::Visualizer::makeFigure(problem, path);
        
     }
 

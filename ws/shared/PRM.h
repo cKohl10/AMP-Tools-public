@@ -5,6 +5,7 @@
 #include "hw/HW7.h"
 #include "hw/HW6.h"
 #include "HelpfulClass.h"
+#include "Astar.h"
 
 class PointCollisionChecker2D : amp::ConfigurationSpace {
     public:
