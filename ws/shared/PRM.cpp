@@ -75,17 +75,28 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
 
     //graph.print();
 
-    //Find the shortest path
-    //std::cout << "Making Shortest Path Problem..." << std::endl;
-    amp::ShortestPathProblem searchProblem;
-    searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
-    searchProblem.init_node = 0;
-    searchProblem.goal_node = 1;
+    //############## A* Search ################
+    // //Find the shortest path
+    // //std::cout << "Making Shortest Path Problem..." << std::endl;
+    // amp::ShortestPathProblem searchProblem;
+    // searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
+    // searchProblem.init_node = 0;
+    // searchProblem.goal_node = 1;
 
+    // //Traverse the graph
+    // //std::cout << "Finding Shortest Path..." << std::endl;
+    // MyAStarAlgo astar;
+    // path_nd = astar.searchPath(searchProblem, heuristic, node_map);
+    //#########################################
+
+    //############## Depth First Search ################
     //Traverse the graph
     //std::cout << "Finding Shortest Path..." << std::endl;
-    MyAStarAlgo astar;
-    path_nd = astar.searchPath(searchProblem, heuristic, node_map);
+    traverseChildren(0, 1);
+    for (int i = 0; i < node_path.size(); i++){
+        path_nd.waypoints.push_back(node_map[node_path[i]]);
+    }
+
     
     return path_nd;
 }
@@ -129,6 +140,34 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
     // for (auto const& x : heuristic.heuristic_values){
     //     std::cout << "Node " << x.first << " has heuristic value " << x.second << std::endl;
     // }
+}
+
+bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
+    //Check if node is the goal node
+    if (currNode == goalNode){
+        return true;
+    }
+
+    //Check if the node has been processed
+    if (processed_nodes[currNode] == true){
+        return false;
+    } 
+
+    //Mark the node as processed
+    processed_nodes[currNode] = true;
+
+    //Get the children nodes
+    std::vector<amp::Node> children = graph.children(currNode);
+
+    //Traverse the children
+    for (int i = 0; i < children.size(); i++){
+        if (traverseChildren(children[i], goalNode) == true){
+            node_path.push_back(children[i]);
+            return true;
+        }
+    }
+
+    return false;
 }
 
 PRMAlgo2D::PRMAlgo2D(){
@@ -204,7 +243,7 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
     amp::Path path_nd = planxd(init_state, goal_state, cspace_ptr);
 
     //Recreate node map to have 2d vectors
-    std::cout << "Converting General Map to 2D Map..." << std::endl;
+    //std::cout << "Converting General Map to 2D Map..." << std::endl;
     for (auto const& x : node_map)
     {
         //Get the node number
@@ -228,7 +267,7 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
     amp::Path2D path;
 
     // Convert the ND path to a 2D path and return it...
-    std::cout << "Converting General Path to 2D Path..." << std::endl;
+    //std::cout << "Converting General Path to 2D Path..." << std::endl;
     for (int i = 0; i < path_nd.waypoints.size(); i++) {
         Eigen::Vector2d waypoint;
         waypoint << path_nd.waypoints[i][0], path_nd.waypoints[i][1];

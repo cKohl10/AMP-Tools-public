@@ -280,3 +280,7 @@ bool lineCollisionDection2D(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, 
     }
     return false;
 }
+
+Eigen::Vector2d vectorXdToVector2d(const Eigen::VectorXd& v) {
+    return v.head<2>();
+}

@@ -15,3 +15,4 @@ bool collisionDetectedPoint(std::vector<amp::Obstacle2D> obstacles, Eigen::Vecto
 bool lineCollisionDection2D(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, Eigen::Vector2d v1);
 double randomDouble(double min, double max);
 double vecAngle(Eigen::Vector2d v1, Eigen::Vector2d v2);
+Eigen::Vector2d vectorXdToVector2d(const Eigen::VectorXd& v);

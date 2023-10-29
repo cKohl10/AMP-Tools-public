@@ -32,6 +32,9 @@ class GenericPRM {
 
         void sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, PointCollisionChecker2D* collision_checker);
 
+        //For Depth first search
+        bool traverseChildren(amp::Node currNode, amp::Node goalNode);
+
         //amp::Path planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker* collision_checker);
 
     public:
@@ -42,7 +45,12 @@ class GenericPRM {
         std::map<amp::Node, Eigen::VectorXd> node_map;
         amp::Graph<double> graph;
 
+        // A* Variables
         amp::LookupSearchHeuristic heuristic;
+
+        // Depth First Search Variables
+        std::map<amp::Node, bool> processed_nodes;
+        std::vector<amp::Node> node_path;
 };
 
 class PRMAlgo2D : public amp::PRM2D, public GenericPRM {
