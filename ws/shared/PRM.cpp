@@ -1,7 +1,7 @@
 #include "PRM.h"
 
 PointCollisionChecker2D::PointCollisionChecker2D(const Eigen::VectorXd& lower_bounds, const Eigen::VectorXd& upper_bounds,  const amp::Environment2D* environment) : amp::ConfigurationSpace(lower_bounds, upper_bounds) {
-    std::cout << "PointCollisionChecker2D constructor called" << std::endl;
+    //std::cout << "PointCollisionChecker2D constructor called" << std::endl;
     this->m_environment = environment;
 }
 
@@ -15,7 +15,7 @@ bool PointCollisionChecker2D::inCollision(const Eigen::VectorXd& state) const{
 const amp::Environment2D* PointCollisionChecker2D::getEnvironment() { return m_environment; }
 
 amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker2D* collision_checker){
-    std::cout << "Called GenericPRM::plan" << std::endl;
+    //std::cout << "Called GenericPRM::plan" << std::endl;
 
     //Make Path Object
     amp::Path path_nd;
@@ -76,14 +76,14 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     //graph.print();
 
     //Find the shortest path
-    std::cout << "Making Shortest Path Problem..." << std::endl;
+    //std::cout << "Making Shortest Path Problem..." << std::endl;
     amp::ShortestPathProblem searchProblem;
     searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
     searchProblem.init_node = 0;
     searchProblem.goal_node = 1;
 
     //Traverse the graph
-    std::cout << "Finding Shortest Path..." << std::endl;
+    //std::cout << "Finding Shortest Path..." << std::endl;
     MyAStarAlgo astar;
     path_nd = astar.searchPath(searchProblem, heuristic, node_map);
     
@@ -91,7 +91,7 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
 }
 
 void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, PointCollisionChecker2D* collision_checker){
-    std::cout << "Sampling Each Node..." << std::endl;
+    //std::cout << "Sampling Each Node..." << std::endl;
 
     int node_size = node_map[0].size();
 
@@ -138,7 +138,7 @@ PRMAlgo2D::PRMAlgo2D(){
 //Initialize with the Cspace bounds
 PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds){
     //DEBUGGING
-    std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
 }
@@ -146,7 +146,7 @@ PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds){
 //Initialize with the Cspace bounds
 PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r){
     //DEBUGGING
-    std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
     this->n = n;
@@ -155,6 +155,38 @@ PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, do
 
 
 amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
+
+    //Make Cspace
+    PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);
+
+    //Make unique pointer to the Cspace
+    //std::unique_ptr<amp::ConfigurationSpace> cspace_ptr = std::make_unique<PointCollisionChecker2D>(xbounds, ybounds, &problem);
+
+    //Convert the problem start and goal states to xd matrices
+    Eigen::VectorXd init_state(2);
+    Eigen::VectorXd goal_state(2);
+    init_state << problem.q_init[0], problem.q_init[1];
+    goal_state << problem.q_goal[0], problem.q_goal[1];
+
+    //Call generic planner
+    amp::Path path_nd = planxd(init_state, goal_state, cspace_ptr);
+
+    //Make 2D path object
+    amp::Path2D path;
+
+    // Convert the ND path to a 2D path and return it...
+    //std::cout << "Converting General Path to 2D Path..." << std::endl;
+    for (int i = 0; i < path_nd.waypoints.size(); i++) {
+        Eigen::Vector2d waypoint;
+        waypoint << path_nd.waypoints[i][0], path_nd.waypoints[i][1];
+        path.waypoints.push_back(waypoint);
+    }
+
+    //Return the path
+    return path;
+}
+
+amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
 
     //Make Cspace
     PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);

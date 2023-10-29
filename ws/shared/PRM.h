@@ -57,6 +57,7 @@ class PRMAlgo2D : public amp::PRM2D, public GenericPRM {
 
         //Plan a path in 2d using the members in problem
         virtual amp::Path2D plan(const amp::Problem2D& problem) override;
+        amp::Path2D planWithFigure(const amp::Problem2D& problem);
 
     private:
         std::map<amp::Node, Eigen::Vector2d> node_map2D;

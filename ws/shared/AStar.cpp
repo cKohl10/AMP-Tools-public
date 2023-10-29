@@ -29,7 +29,7 @@ struct CompareAstarNode{
 
 MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) {
 
-    std::cout << "Running A* Search..." << std::endl;
+    //std::cout << "Running A* Search..." << std::endl;
     
     //Create Priority List
     //std::vector<AstarNode*> O;
@@ -43,7 +43,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     AstarNode* initNode = new AstarNode(problem.init_node, 0, heuristic(problem.init_node), 0, nullptr, std::vector<AstarNode*>());
 
     //Debugging
-    initNode->print();
+    //initNode->print();
 
     //Push intial node to priority list
     O.push(initNode);
@@ -128,11 +128,11 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
 amp::Path MyAStarAlgo::searchPath(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic, std::map<amp::Node, Eigen::VectorXd> node_map){
     
-    std::cout << "Running search before conversion..." << std::endl;
+    //std::cout << "Running search before conversion..." << std::endl;
     GraphSearchResult path_searchResult = search(problem, heuristic);
 
     //Build the path
-    std::cout << "Beginning path conversion..." << std::endl;
+    //std::cout << "Beginning path conversion..." << std::endl;
     amp::Path path;
 
     //Loop through all the nodes
