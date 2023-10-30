@@ -8,10 +8,19 @@ RRTAlgo2D::RRTAlgo2D(double r, double p_goal, int n, double epsilon, Eigen::Vect
     this->bounds = {xbounds, ybounds};
 }
 
+RRTAlgo2D::RRTAlgo2D(){
+    //Default values
+    this->r = 0.5;
+    this->p_goal = 0.05;
+    this->n = 5000;
+    this->epsilon = 0.25;
+    this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
+}
+
 amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
 
     //Debug
-    std::cout << "Running RRT Algorithm..." << std::endl;
+    //std::cout << "Running RRT Algorithm..." << std::endl;
 
     //Make Path Object
     amp::Path path_nd;
@@ -39,19 +48,19 @@ amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
 
         //Sample random node with probability p_goal
         if (randomDouble(0, 1) > p_goal){
-            std::cout << "Sampling Random Node..." << std::endl;
+            //std::cout << "Sampling Random Node..." << std::endl;
             //Sample random node location
             for (int j = 0; j < bounds.size(); j++) {   
                 q_rand[j] = randomDouble(bounds[j][0], bounds[j][1]);
             }
         } else{
-            std::cout << "Sampling Goal Node..." << std::endl;
+            //std::cout << "Sampling Goal Node..." << std::endl;
             //Sample goal node location
             q_rand = q_goal;
         }
 
         //Find the nearest node to the random node
-        std::cout << "Finding Nearest Node..." << std::endl;
+        //std::cout << "Finding Nearest Node..." << std::endl;
         amp::Node nearest_node = nearestNeighbor(q_rand);
         Eigen::VectorXd q_near = node_map[nearest_node];
 
@@ -90,16 +99,23 @@ amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
                 //Return the path
                 return path_nd;
             }
-        }
 
-        node_counter++;
-        std::cout << "Node " << node_counter << "/" << n << " Created" << std::endl;
+            node_counter++;
+
+        }
+        //std::cout << "Node " << node_counter << "/" << n << " Created" << std::endl;
 
     }
     return path_nd;
 }
 
 amp::Path2D RRTAlgo2D::plan(const amp::Problem2D& problem){
+    //Update Bounds
+    Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
+    Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
+    bounds[0] = xbounds;
+    bounds[1] = ybounds;
+
     amp::Path path_xd = planxd(problem);
 
     //Convert the path to 2D
@@ -124,21 +140,23 @@ amp::Path2D RRTAlgo2D::planWithFigure(const amp::Problem2D& problem){
         node_map2D[x.first] = q_2d;
 
         //Debug
-        std::cout << "Original Position: (";
-        for (int i = 0; i < x.second.size(); i++){
-            std::cout << x.second[i] << ", ";
-        }
-        std::cout << ") -> New Position (" << q_2d[0] << ", " << q_2d[1] << ")" << std::endl;
+        // std::cout << "Original Position: (";
+        // for (int i = 0; i < x.second.size(); i++){
+        //     std::cout << x.second[i] << ", ";
+        // }
+        // std::cout << ") -> New Position (" << q_2d[0] << ", " << q_2d[1] << ")" << std::endl;
     }
-
-    //Check the graph made by the generic planner
-    amp::Visualizer::makeFigure(problem, graph, node_map2D);
 
     //Convert the path to 2D
     amp::Path2D path_2d;
     for (auto& x : path_xd.waypoints){
         path_2d.waypoints.push_back(vectorXdToVector2d(x));
     }
+
+    amp::Visualizer::makeFigure(problem, path_2d);
+
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, graph, node_map2D);
 
     return path_2d;
 }

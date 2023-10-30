@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {false, false, true};
+    std::vector<bool> run = {false, false, false, false};
     std::vector<amp::Problem2D> problems = {amp::HW5::getWorkspace1(), amp::HW2::getWorkspace1(), amp::HW2::getWorkspace2()};
     std::vector<std::string> problem_names = {"HW5 EX1", "HW2 EX1", "HW2 EX2"};
 
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
             //Plan the path
             amp::Path2D path = prm_algo.planWithFigure(problem);
 
-            amp::Visualizer::makeFigure(problem, path);
+            //amp::Visualizer::makeFigure(problem, path);
         }
         
         amp::Visualizer::showFigures();
@@ -99,7 +99,7 @@ int main(int argc, char** argv) {
        amp::Visualizer::showFigures();
     }
 
-    // ############ Exercise 2 ###############
+// ############ Exercise 2a ###############
     // RRT
     if (run[2]){
        for (amp::Problem2D p : problems){
@@ -122,9 +122,60 @@ int main(int argc, char** argv) {
             //Plan the path
             amp::Path2D path = rrt_algo.planWithFigure(problem);
 
-            amp::Visualizer::makeFigure(problem, path);
+
+            //amp::Visualizer::makeFigure(problem, path);
         }
         
+        amp::Visualizer::showFigures();
+    }
+
+// ############ Exercise 2b ###############
+    // Varying the number of nodes and radius
+    if (run[3]){
+
+        //Comparison Metrics
+        std::vector<double> success_rates;
+
+        for (int i = 0; i < problems.size(); i++){
+            //Get Problem 
+            amp::Problem2D problem = problems[i];
+
+            //Set the bounds of the problem
+            Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
+            Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
+
+            //Set the number of nodes to sample and the radius of the neighborhood
+            int n = 5000;
+            double r = 0.5;
+            double p_goal = 0.05;
+            double epsilon = 0.25;
+
+            //Construct the problem
+            RRTAlgo2D rrt_algo(r, p_goal, n, epsilon, xbounds, ybounds);
+
+            int success_count = 0;
+
+            //loop 100 times
+            for (int i = 0; i < 100; i++){
+
+                //Plan the path
+                amp::Path2D path = rrt_algo.plan(problem);
+
+                //Count how many success are in each benchmark
+                if (path.waypoints.size() > 0){
+                    success_count++;
+                }
+            }
+
+            std::cout << "Environment " << i+1 << "/" << problems.size() << " Completed: " << success_count << "/100 Paths Found" << std::endl;
+
+            //Add success rate to vector
+            success_rates.push_back(success_count);
+
+        }
+       
+        //Make a bar graph
+        amp::Visualizer::makeBarGraph(success_rates, problem_names, "RRT Benchmark", "Environment", "Success Rate");
         amp::Visualizer::showFigures();
     }
 
@@ -133,6 +184,6 @@ int main(int argc, char** argv) {
     //Show figures
     //Visualizer::showFigures();
 
-    //amp::HW7::grade(prm_algo, rrt_algo, carson.kohlbrenner@colorado.edu, int argc, char** argv);
+    amp::HW7::grade<PRMAlgo2D, RRTAlgo2D>("carson.kohlbrenner@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
     return 0;
 }

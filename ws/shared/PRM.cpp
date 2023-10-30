@@ -172,6 +172,8 @@ bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
 
 PRMAlgo2D::PRMAlgo2D(){
     //Generic Constructor
+    this->n = 500;
+    this->r = 1;
 }
 
 //Initialize with the Cspace bounds
@@ -260,9 +262,6 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
         node_map2D[node_num] = node_pos_2d;
     }
 
-    //Check the graph made by the generic planner
-    amp::Visualizer::makeFigure(problem, graph, node_map2D);
-
     //Make 2D path object
     amp::Path2D path;
 
@@ -273,6 +272,12 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
         waypoint << path_nd.waypoints[i][0], path_nd.waypoints[i][1];
         path.waypoints.push_back(waypoint);
     }
+
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, path);
+
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, graph, node_map2D);
 
     //Return the path
     return path;

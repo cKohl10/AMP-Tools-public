@@ -14,6 +14,7 @@ class RRTAlgo2D : amp::GoalBiasRRT2D{
         /// @param xbounds 
         /// @param ybounds 
         RRTAlgo2D(double r, double p_goal, int n, double epsilon, Eigen::Vector2d xbounds, Eigen::Vector2d ybounds);
+        RRTAlgo2D();
 
         virtual amp::Path2D plan(const amp::Problem2D& problem) override;
 
