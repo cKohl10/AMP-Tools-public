@@ -4,6 +4,7 @@
 #include "hw/HW5.h"
 #include "PRM.h"
 #include "RRT.h"
+#include <ctime>
 //#include "ShareCore.h"
 
 
@@ -59,15 +60,23 @@ int main(int argc, char** argv) {
 
             std::list<std::vector<double>> hpSets = {{200, 0.5}, {200, 1}, {200, 1.5}, {200, 2}, {500, 0.5}, {500, 1}, {500, 1.5}, {500, 2}};
             std::vector<std::string> hpSetsList = {"200, 0.5", "200, 1", "200, 1.5", "200, 2", "500, 0.5", "500, 1", "500, 1.5", "500, 2"};
-            std::vector<double> success_rates;
+            std::list<std::vector<double>> success_rates;
+            std::list<std::vector<double>> path_lengths;
+            std::list<std::vector<double>> run_times;
 
             int j = 1;
 
             for (auto& x : hpSets){
-                int success_count = 0;
+                double success_count = 0;
+
+                std::vector<double> paths;
+                std::vector<double> times;
 
                 //loop 100 times
                 for (int i = 0; i < 100; i++){
+                    // Start time
+                    std::clock_t start = std::clock();
+
                     //Set the number of nodes to sample and the radius of the neighborhood
                     int n = x[0];
                     double r = x[1];
@@ -77,10 +86,15 @@ int main(int argc, char** argv) {
 
                     //Plan the path
                     amp::Path2D path = prm_algo.plan(problem);
-
+                    // End time
+                    std::clock_t end = std::clock();
                     //Count how many success are in each benchmark
                     if (path.waypoints.size() > 0){
                         success_count++;
+                        paths.push_back(pathDistance(path));
+                        double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+                        times.push_back(elapsed);
+
                     }
                 }
 
@@ -88,11 +102,14 @@ int main(int argc, char** argv) {
                 j++;
 
                 //Add success rate to vector
-                success_rates.push_back(success_count);
+                success_rates.push_back({success_count});
+                path_lengths.push_back(paths);
+                run_times.push_back(times);
+
             }
 
             //Make a bar graph
-            amp::Visualizer::makeBarGraph(success_rates, hpSetsList, problem_names[i] + " Benchmark", "Number of Nodes, Radius", "Success Rate");
+            //amp::Visualizer::makeBarGraph(success_rates, hpSetsList, problem_names[i] + " Benchmark", "Number of Nodes, Radius", "Success Rate");
 
         }
        
@@ -184,6 +201,6 @@ int main(int argc, char** argv) {
     //Show figures
     //Visualizer::showFigures();
 
-    amp::HW7::grade<PRMAlgo2D, RRTAlgo2D>("carson.kohlbrenner@colorado.edu", argc, argv, std::make_tuple(), std::make_tuple());
+    amp::HW7::grade<PRMAlgo2D, RRTAlgo2D>("carson.kohlbrenner@colorado.edu", argc, argv);
     return 0;
 }

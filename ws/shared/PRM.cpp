@@ -76,26 +76,26 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     //graph.print();
 
     //############## A* Search ################
-    // //Find the shortest path
-    // //std::cout << "Making Shortest Path Problem..." << std::endl;
-    // amp::ShortestPathProblem searchProblem;
-    // searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
-    // searchProblem.init_node = 0;
-    // searchProblem.goal_node = 1;
+    //Find the shortest path
+    //std::cout << "Making Shortest Path Problem..." << std::endl;
+    amp::ShortestPathProblem searchProblem;
+    searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
+    searchProblem.init_node = 0;
+    searchProblem.goal_node = 1;
 
-    // //Traverse the graph
-    // //std::cout << "Finding Shortest Path..." << std::endl;
-    // MyAStarAlgo astar;
-    // path_nd = astar.searchPath(searchProblem, heuristic, node_map);
+    //Traverse the graph
+    //std::cout << "Finding Shortest Path..." << std::endl;
+    MyAStarAlgo astar;
+    path_nd = astar.searchPath(searchProblem, heuristic, node_map);
     //#########################################
 
     //############## Depth First Search ################
     //Traverse the graph
     //std::cout << "Finding Shortest Path..." << std::endl;
-    traverseChildren(0, 1);
-    for (int i = 0; i < node_path.size(); i++){
-        path_nd.waypoints.push_back(node_map[node_path[i]]);
-    }
+    // traverseChildren(0, 1);
+    // for (int i = 0; i < node_path.size(); i++){
+    //     path_nd.waypoints.push_back(node_map[node_path[i]]);
+    // }
 
     
     return path_nd;
@@ -173,29 +173,37 @@ bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
 PRMAlgo2D::PRMAlgo2D(){
     //Generic Constructor
     this->n = 500;
-    this->r = 1;
+    this->r = 2;
+    //std::cout << "Generic PRM Constructor called" << std::endl;
 }
 
 //Initialize with the Cspace bounds
 PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds){
-    //DEBUGGING
-    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
+    //DEBUGGING
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl; 
 }
 
 //Initialize with the Cspace bounds
-PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r){
-    //DEBUGGING
-    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
+PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r){  
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
     this->n = n;
     this->r = r;
+    //DEBUGGING
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ") and r = "<< r <<", n = " << n << std::endl;   
 }
 
 
 amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
+
+    //Check if the bounds have been set yet
+    if (bounds.size() == 0){
+        //std::cout << "Bounds have not been set yet" << std::endl;
+        this->bounds.push_back({problem.x_min, problem.x_max});
+        this->bounds.push_back({problem.y_min, problem.y_max});
+    }
 
     //Make Cspace
     PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);

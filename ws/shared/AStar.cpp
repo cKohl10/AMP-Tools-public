@@ -122,6 +122,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
     //If the priority queue is exhausted, return an empty path
     std::cout << "No path found!" << std::endl;
+    std::cout << "Iterations: " << counter << std::endl;
 
     return GraphSearchResult();
 }
