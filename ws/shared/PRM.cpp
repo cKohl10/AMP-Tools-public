@@ -172,7 +172,7 @@ bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
 
 PRMAlgo2D::PRMAlgo2D(){
     //Generic Constructor
-    this->n = 500;
+    this->n = 1000;
     this->r = 2;
     //std::cout << "Generic PRM Constructor called" << std::endl;
 }

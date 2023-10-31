@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {false, false, false, false};
+    std::vector<bool> run = {false, false, true, true};
     std::vector<amp::Problem2D> problems = {amp::HW5::getWorkspace1(), amp::HW2::getWorkspace1(), amp::HW2::getWorkspace2()};
     std::vector<std::string> problem_names = {"HW5 EX1", "HW2 EX1", "HW2 EX2"};
 
@@ -138,6 +138,9 @@ int main(int argc, char** argv) {
 
             //Plan the path
             amp::Path2D path = rrt_algo.planWithFigure(problem);
+            for (auto& x : path.waypoints){
+                std::cout << x[0] << ", " << x[1] << std::endl;
+            }
 
 
             //amp::Visualizer::makeFigure(problem, path);

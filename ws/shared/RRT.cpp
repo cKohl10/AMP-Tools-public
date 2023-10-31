@@ -95,6 +95,7 @@ amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
                     curr_node = graph.parents(curr_node)[0];
                 }
                 path_nd.waypoints.push_back(node_map[curr_node]);
+                std::reverse(path_nd.waypoints.begin(), path_nd.waypoints.end());
 
                 //Return the path
                 return path_nd;
@@ -106,7 +107,8 @@ amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
         //std::cout << "Node " << node_counter << "/" << n << " Created" << std::endl;
 
     }
-    return std::reverse(path_nd);
+    
+    return path_nd;
 }
 
 amp::Path2D RRTAlgo2D::plan(const amp::Problem2D& problem){

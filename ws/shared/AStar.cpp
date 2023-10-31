@@ -52,7 +52,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     int counter = 1;
 
     //Repeat until prioirty list is exhausted
-    while(O.size() > 0){
+    while(O.size() > 0 && counter < 2000000){
 
         //Get the current node
         AstarNode* parent = O.top();
