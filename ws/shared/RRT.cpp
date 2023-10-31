@@ -106,7 +106,7 @@ amp::Path RRTAlgo2D::planxd(const amp::Problem2D& problem){
         //std::cout << "Node " << node_counter << "/" << n << " Created" << std::endl;
 
     }
-    return path_nd;
+    return std::reverse(path_nd);
 }
 
 amp::Path2D RRTAlgo2D::plan(const amp::Problem2D& problem){
