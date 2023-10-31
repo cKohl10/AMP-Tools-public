@@ -52,7 +52,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     int counter = 1;
 
     //Repeat until prioirty list is exhausted
-    while(O.size() > 0 && counter < 2000000){
+    while(O.size() > 0 && counter < 1000000){
 
         //Get the current node
         AstarNode* parent = O.top();
@@ -81,6 +81,12 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
                 parent = parent->parent;
             }
             result.node_path.push_front(parent->node);
+
+            //Delete the pointers to prevent memory leak
+            for (auto it = C.begin(); it != C.end(); it++){
+                delete it->second;
+            }
+
             return result;
         }
 

@@ -281,12 +281,13 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
         path.waypoints.push_back(waypoint);
     }
 
-    //Check the graph made by the generic planner
-    amp::Visualizer::makeFigure(problem, path);
+    if (path_nd.waypoints.size() > 0){
+        //Check the graph made by the generic planner
+        amp::Visualizer::makeFigure(problem, path);
 
-    //Check the graph made by the generic planner
-    amp::Visualizer::makeFigure(problem, graph, node_map2D);
-
+        //Check the graph made by the generic planner
+        amp::Visualizer::makeFigure(problem, graph, node_map2D);
+    }
     //Return the path
     return path;
 }
