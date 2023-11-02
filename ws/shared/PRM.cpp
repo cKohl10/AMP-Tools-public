@@ -1,32 +1,124 @@
 #include "PRM.h"
 
 PointCollisionChecker2D::PointCollisionChecker2D(const Eigen::VectorXd& lower_bounds, const Eigen::VectorXd& upper_bounds,  const amp::Environment2D* environment) : amp::ConfigurationSpace(lower_bounds, upper_bounds) {
-    std::cout << "PointCollisionChecker2D constructor called" << std::endl;
+    //std::cout << "PointCollisionChecker2D constructor called" << std::endl;
     this->m_environment = environment;
 }
 
 bool PointCollisionChecker2D::inCollision(const Eigen::VectorXd& state) const{
-    return false;
+
+    // ######## NOTE: This is only currently set up for 2D ########
+    Eigen::Vector2d state2D = {state[0], state[1]};
+    return collisionDetectedPoint(m_environment->obstacles, state2D);
 }
 
-amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker2D* collision_checker){
-    std::cout << "Called GenericPRM::plan" << std::endl;
+const amp::Environment2D* PointCollisionChecker2D::getEnvironment() { return m_environment; }
+
+amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, std::shared_ptr<PointCollisionChecker2D> collision_checker){
+    //std::cout << "Called GenericPRM::plan" << std::endl;
 
     //Make Path Object
     amp::Path path_nd;
-
-    //Add the first node to the vector of nodes
-    std::map<amp::Node, Eigen::VectorXd> node_map;
 
     //Add the initial state and goal state to the node map
     node_map[0] = init_state;
     node_map[1] = goal_state;
 
     //Sample n times and add the nodes to the node map
-    for (amp::Node i = 2; i < n; i++) {
+    sampleMap(node_map, collision_checker);
+
+    //print the node map
+    // for (auto const& x : node_map)
+    // {
+    //     std::cout << x.first  // string (key)
+    //               << ':'
+    //               << x.second.transpose() << std::endl;
+    // }
+
+    //Connect the neighbors of each node
+    for (auto const& x : node_map)
+    {
+        //Get the node number
+        amp::Node node_num = x.first;
+
+        //Get the node position
+        Eigen::VectorXd node_pos = x.second;
+
+        //Check every other node to see if it is within the neighborhood
+        for (auto const& y : node_map)
+        {
+            //Get the node number
+            amp::Node neighbor_num = y.first;
+
+            //Get the node position
+            Eigen::VectorXd neighbor_pos = y.second;
+
+            //Check if the node is within the neighborhood
+            if ((node_pos - neighbor_pos).norm() < r && node_num != neighbor_num) {
+
+                //Check if there is a collision in the path between the two nodes
+                //########## NOTE: CURRENTLY ONLY IMPLEMENTED FOR 2D ##############
+                //Convert the node positions to 2D vectors
+                Eigen::Vector2d node_pos2D = {node_pos[0], node_pos[1]};
+                Eigen::Vector2d neighbor_pos2D = {neighbor_pos[0], neighbor_pos[1]};
+                if (lineCollisionDection2D(collision_checker->getEnvironment()->obstacles, node_pos2D, neighbor_pos2D) == true){
+                    continue;
+                }
+                //##################################################################
+
+                //Add the edge to the graph
+                graph.connect(node_num, neighbor_num, (node_pos - neighbor_pos).norm());
+            }
+        }
+
+    }
+
+    //graph.print();
+
+    //############## A* Search ################
+    //Find the shortest path
+    //std::cout << "Making Shortest Path Problem..." << std::endl;
+    amp::ShortestPathProblem searchProblem;
+    searchProblem.graph = std::make_shared<amp::Graph<double>>(graph);
+    searchProblem.init_node = 0;
+    searchProblem.goal_node = 1;
+
+    //Traverse the graph
+    //std::cout << "Finding Shortest Path..." << std::endl;
+    MyAStarAlgo astar;
+    path_nd = astar.searchPath(searchProblem, heuristic, node_map);
+    //#########################################
+
+    //############## Depth First Search ################
+    //Traverse the graph
+    //std::cout << "Finding Shortest Path..." << std::endl;
+    // traverseChildren(0, 1);
+    // for (int i = 0; i < node_path.size(); i++){
+    //     path_nd.waypoints.push_back(node_map[node_path[i]]);
+    // }
+
+    
+    return path_nd;
+}
+
+void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, std::shared_ptr<PointCollisionChecker2D> collision_checker){
+    //std::cout << "Sampling Each Node..." << std::endl;
+
+    int node_size = node_map[0].size();
+
+    Eigen::VectorXd goal_pos = node_map[1];
+
+    //Set the heuristics for goal and start
+    heuristic.heuristic_values[0] = 0;
+    heuristic.heuristic_values[1] = 0;
+
+    int i = 2;
+
+    //Sample n times and add the nodes to the node map
+    while(i < n) {
 
         //Create a new node the same dimension as the init_state
-        Eigen::VectorXd q_rand(init_state.size());
+        Eigen::VectorXd q_rand(node_size);
 
         //Sample random node location
         for (int j = 0; j < bounds.size(); j++) {   
@@ -34,49 +126,93 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
         }
 
         //Check if the node is collision free
-        if (collision_checker->inCollision(q_rand) == false) {
-            node_map[i] = q_rand;
+        if (collision_checker->inCollision(q_rand) == true) {
+            continue;
+        }
+
+        //Add node to map
+        node_map[i] = q_rand;
+
+        //Determine its heuristic value
+        heuristic.heuristic_values[i] = (q_rand-goal_pos).norm();
+
+        //Increment counter
+        i++;
+
+    }
+
+    //print out heuristic map
+    // for (auto const& x : heuristic.heuristic_values){
+    //     std::cout << "Node " << x.first << " has heuristic value " << x.second << std::endl;
+    // }
+}
+
+bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
+    //Check if node is the goal node
+    if (currNode == goalNode){
+        return true;
+    }
+
+    //Check if the node has been processed
+    if (processed_nodes[currNode] == true){
+        return false;
+    } 
+
+    //Mark the node as processed
+    processed_nodes[currNode] = true;
+
+    //Get the children nodes
+    std::vector<amp::Node> children = graph.children(currNode);
+
+    //Traverse the children
+    for (int i = 0; i < children.size(); i++){
+        if (traverseChildren(children[i], goalNode) == true){
+            node_path.push_back(children[i]);
+            return true;
         }
     }
 
-    //print the node map
-    for (auto const& x : node_map)
-    {
-        std::cout << x.first  // string (key)
-                  << ':'
-                  << x.second.transpose() << std::endl;
-    }
-
-    return path_nd;
+    return false;
 }
 
 PRMAlgo2D::PRMAlgo2D(){
     //Generic Constructor
+    this->n = 200;
+    this->r = 5;
+    //std::cout << "Generic PRM Constructor called" << std::endl;
 }
 
 //Initialize with the Cspace bounds
 PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds){
-    //DEBUGGING
-    std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
+    //DEBUGGING
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl; 
 }
 
 //Initialize with the Cspace bounds
-PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r){
-    //DEBUGGING
-    std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ")" << std::endl;   
+PRMAlgo2D::PRMAlgo2D(Eigen::Vector2d xbounds, Eigen::Vector2d ybounds, int n, double r){  
     this->bounds.push_back(xbounds);
     this->bounds.push_back(ybounds);
     this->n = n;
     this->r = r;
+    //DEBUGGING
+    //std::cout << "PRMAlgo2D Constructed with xbounds (" << xbounds[0] << ", " << xbounds[1] << ") and ybounds (" << ybounds[0] << ", " << ybounds[1] << ") and r = "<< r <<", n = " << n << std::endl;   
 }
 
 
 amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
 
+    //Check if the bounds have been set yet
+    if (bounds.size() == 0){
+        //std::cout << "Bounds have not been set yet" << std::endl;
+        this->bounds.push_back({problem.x_min, problem.x_max});
+        this->bounds.push_back({problem.y_min, problem.y_max});
+        this->r = (problem.x_max - problem.x_min)/2;
+    }
+
     //Make Cspace
-    PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);
+    std::shared_ptr<PointCollisionChecker2D> cspace_ptr = std::make_shared<PointCollisionChecker2D>(bounds[0], bounds[1], &problem);
 
     //Make unique pointer to the Cspace
     //std::unique_ptr<amp::ConfigurationSpace> cspace_ptr = std::make_unique<PointCollisionChecker2D>(xbounds, ybounds, &problem);
@@ -90,8 +226,83 @@ amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
     //Call generic planner
     amp::Path path_nd = planxd(init_state, goal_state, cspace_ptr);
 
+    //Make 2D path object
+    amp::Path2D path;
+
     // Convert the ND path to a 2D path and return it...
-    return amp::Path2D();
+    //std::cout << "Converting General Path to 2D Path..." << std::endl;
+    for (int i = 0; i < path_nd.waypoints.size(); i++) {
+        Eigen::Vector2d waypoint;
+        waypoint << path_nd.waypoints[i][0], path_nd.waypoints[i][1];
+        path.waypoints.push_back(waypoint);
+    }
+
+    //Return the path
+    return path;
+}
+
+amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
+
+
+    //Check if the bounds have been set yet
+    if (bounds.size() == 0){
+        //std::cout << "Bounds have not been set yet" << std::endl;
+        this->bounds.push_back({problem.x_min, problem.x_max});
+        this->bounds.push_back({problem.y_min, problem.y_max});
+        this->r = (problem.x_max - problem.x_min)/5;
+    }
+    //Make Cspace
+    std::shared_ptr<PointCollisionChecker2D> cspace_ptr = std::make_shared<PointCollisionChecker2D>(bounds[0], bounds[1], &problem);
+
+    //Make unique pointer to the Cspace
+    //std::unique_ptr<amp::ConfigurationSpace> cspace_ptr = std::make_unique<PointCollisionChecker2D>(xbounds, ybounds, &problem);
+
+    //Convert the problem start and goal states to xd matrices
+    Eigen::VectorXd init_state(2);
+    Eigen::VectorXd goal_state(2);
+    init_state << problem.q_init[0], problem.q_init[1];
+    goal_state << problem.q_goal[0], problem.q_goal[1];
+
+    //Call generic planner
+    amp::Path path_nd = planxd(init_state, goal_state, cspace_ptr);
+
+    //Recreate node map to have 2d vectors
+    //std::cout << "Converting General Map to 2D Map..." << std::endl;
+    for (auto const& x : node_map)
+    {
+        //Get the node number
+        amp::Node node_num = x.first;
+
+        //Get the node position
+        Eigen::VectorXd node_pos = x.second;
+
+        //Create a 2d vector
+        Eigen::Vector2d node_pos_2d;
+        node_pos_2d << node_pos[0], node_pos[1];
+
+        //Add the node to the 2d node map
+        node_map2D[node_num] = node_pos_2d;
+    }
+
+    //Make 2D path object
+    amp::Path2D path;
+
+    // Convert the ND path to a 2D path and return it...
+    //std::cout << "Converting General Path to 2D Path..." << std::endl;
+    for (int i = 0; i < path_nd.waypoints.size(); i++) {
+        Eigen::Vector2d waypoint;
+        waypoint << path_nd.waypoints[i][0], path_nd.waypoints[i][1];
+        path.waypoints.push_back(waypoint);
+    }
+
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, path);
+
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, graph, node_map2D);
+
+    //Return the path
+    return path;
 }
 
 // void PRMAlgo2D::populateMap() {
