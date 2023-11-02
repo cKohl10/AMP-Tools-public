@@ -28,9 +28,9 @@ class GenericPRM {
         /// @param goal_state 
         /// @param collision_checker 
         /// @return 
-        amp::Path planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker2D* collision_checker);
+        amp::Path planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, std::shared_ptr<PointCollisionChecker2D> collision_checker);
 
-        void sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, PointCollisionChecker2D* collision_checker);
+        void sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, std::shared_ptr<PointCollisionChecker2D> collision_checker);
 
         //For Depth first search
         bool traverseChildren(amp::Node currNode, amp::Node goalNode);

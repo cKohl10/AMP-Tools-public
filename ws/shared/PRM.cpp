@@ -14,7 +14,7 @@ bool PointCollisionChecker2D::inCollision(const Eigen::VectorXd& state) const{
 
 const amp::Environment2D* PointCollisionChecker2D::getEnvironment() { return m_environment; }
 
-amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, PointCollisionChecker2D* collision_checker){
+amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::VectorXd& goal_state, std::shared_ptr<PointCollisionChecker2D> collision_checker){
     //std::cout << "Called GenericPRM::plan" << std::endl;
 
     //Make Path Object
@@ -101,7 +101,7 @@ amp::Path GenericPRM::planxd(const Eigen::VectorXd& init_state, const Eigen::Vec
     return path_nd;
 }
 
-void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, PointCollisionChecker2D* collision_checker){
+void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, std::shared_ptr<PointCollisionChecker2D> collision_checker){
     //std::cout << "Sampling Each Node..." << std::endl;
 
     int node_size = node_map[0].size();
@@ -112,8 +112,10 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
     heuristic.heuristic_values[0] = 0;
     heuristic.heuristic_values[1] = 0;
 
+    int i = 2;
+
     //Sample n times and add the nodes to the node map
-    for (amp::Node i = 2; i < n; i++) {
+    while(i < n) {
 
         //Create a new node the same dimension as the init_state
         Eigen::VectorXd q_rand(node_size);
@@ -133,6 +135,9 @@ void GenericPRM::sampleMap(std::map<amp::Node, Eigen::VectorXd>& node_map, Point
 
         //Determine its heuristic value
         heuristic.heuristic_values[i] = (q_rand-goal_pos).norm();
+
+        //Increment counter
+        i++;
 
     }
 
@@ -172,8 +177,8 @@ bool GenericPRM::traverseChildren(amp::Node currNode, amp::Node goalNode){
 
 PRMAlgo2D::PRMAlgo2D(){
     //Generic Constructor
-    this->n = 1000;
-    this->r = 2;
+    this->n = 200;
+    this->r = 5;
     //std::cout << "Generic PRM Constructor called" << std::endl;
 }
 
@@ -203,10 +208,11 @@ amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
         //std::cout << "Bounds have not been set yet" << std::endl;
         this->bounds.push_back({problem.x_min, problem.x_max});
         this->bounds.push_back({problem.y_min, problem.y_max});
+        this->r = (problem.x_max - problem.x_min)/2;
     }
 
     //Make Cspace
-    PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);
+    std::shared_ptr<PointCollisionChecker2D> cspace_ptr = std::make_shared<PointCollisionChecker2D>(bounds[0], bounds[1], &problem);
 
     //Make unique pointer to the Cspace
     //std::unique_ptr<amp::ConfigurationSpace> cspace_ptr = std::make_unique<PointCollisionChecker2D>(xbounds, ybounds, &problem);
@@ -237,8 +243,16 @@ amp::Path2D PRMAlgo2D::plan(const amp::Problem2D& problem){
 
 amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
 
+
+    //Check if the bounds have been set yet
+    if (bounds.size() == 0){
+        //std::cout << "Bounds have not been set yet" << std::endl;
+        this->bounds.push_back({problem.x_min, problem.x_max});
+        this->bounds.push_back({problem.y_min, problem.y_max});
+        this->r = (problem.x_max - problem.x_min)/5;
+    }
     //Make Cspace
-    PointCollisionChecker2D* cspace_ptr = new PointCollisionChecker2D(bounds[0], bounds[1], &problem);
+    std::shared_ptr<PointCollisionChecker2D> cspace_ptr = std::make_shared<PointCollisionChecker2D>(bounds[0], bounds[1], &problem);
 
     //Make unique pointer to the Cspace
     //std::unique_ptr<amp::ConfigurationSpace> cspace_ptr = std::make_unique<PointCollisionChecker2D>(xbounds, ybounds, &problem);
@@ -281,13 +295,12 @@ amp::Path2D PRMAlgo2D::planWithFigure(const amp::Problem2D& problem){
         path.waypoints.push_back(waypoint);
     }
 
-    if (path_nd.waypoints.size() > 0){
-        //Check the graph made by the generic planner
-        amp::Visualizer::makeFigure(problem, path);
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, path);
 
-        //Check the graph made by the generic planner
-        amp::Visualizer::makeFigure(problem, graph, node_map2D);
-    }
+    //Check the graph made by the generic planner
+    amp::Visualizer::makeFigure(problem, graph, node_map2D);
+
     //Return the path
     return path;
 }

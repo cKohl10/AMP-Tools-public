@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     amp::RNG::seed(amp::RNG::randiUnbounded());
 
     //Vector of bools to make it easier to run the right graphs
-    std::vector<bool> run = {true, true, false, false};
+    std::vector<bool> run = {false, false, true, false};
     std::vector<amp::Problem2D> problems = {amp::HW5::getWorkspace1(), amp::HW2::getWorkspace1(), amp::HW2::getWorkspace2()};
     std::vector<std::string> problem_names = {"HW5 EX1", "HW2 EX1", "HW2 EX2"};
 
@@ -29,21 +29,33 @@ int main(int argc, char** argv) {
             //Set the bounds of the problem
             Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
             Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
+            // Eigen::Vector2d xbounds = {-1,11};
+            // Eigen::Vector2d ybounds = {-3,3};
 
             //Set the number of nodes to sample and the radius of the neighborhood
             int n = 200;
-            double r = 1;
+            double r = 2;
 
             //Construct the problem
             PRMAlgo2D prm_algo(xbounds, ybounds, n, r);
+            //PRMAlgo2D prm_algo;
 
             //Plan the path
-            amp::Path2D path = prm_algo.planWithFigure(problem);
+            amp::Path2D path;
+            for (int j = 0; j < 10; j++){
+                amp::Path2D tempPath = prm_algo.planWithFigure(problem);
+                if (tempPath.waypoints.size() > 0){
+                    path = tempPath;
+                    break;
+                }
+            }
+
+            std::cout << "Path Length: " << pathDistance(path) << std::endl;
 
             //amp::Visualizer::makeFigure(problem, path);
         }
         
-        amp::Visualizer::showFigures();
+        //amp::Visualizer::showFigures();
     }
 
 // ############ Exercise 1aii ###############
@@ -58,8 +70,8 @@ int main(int argc, char** argv) {
             Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
             Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
 
-            std::list<std::vector<double>> hpSets = {{200, 0.5}, {200, 1}, {200, 1.5}, {200, 2}, {500, 0.5}, {500, 1}, {500, 1.5}, {500, 2}};
-            std::vector<std::string> hpSetsList = {"200, 0.5", "200, 1", "200, 1.5", "200, 2", "500, 0.5", "500, 1", "500, 1.5", "500, 2"};
+            std::list<std::vector<double>> hpSets = {{200, 1}, {200, 2}, {500, 1}, {500, 2}, {1000, 1}, {1000, 2}};
+            std::vector<std::string> hpSetsList = {"200, 1", "200, 2", "500, 1", "500, 2", "1000, 1", "1000, 2"};
             std::list<std::vector<double>> success_rates;
             std::list<std::vector<double>> path_lengths;
             std::list<std::vector<double>> run_times;
@@ -106,14 +118,19 @@ int main(int argc, char** argv) {
                 path_lengths.push_back(paths);
                 run_times.push_back(times);
 
+
             }
 
             //Make a bar graph
             //amp::Visualizer::makeBarGraph(success_rates, hpSetsList, problem_names[i] + " Benchmark", "Number of Nodes, Radius", "Success Rate");
+            //Plot
+            amp::Visualizer::makeBoxPlot(success_rates, hpSetsList, "PRM " + problem_names[i], "Number of Nodes, Neighborhood Radius", "Number of Successes");
+            amp::Visualizer::makeBoxPlot(path_lengths, hpSetsList, "PRM " + problem_names[i], "Number of Nodes, Neighborhood Radius", "Path Length");
+            amp::Visualizer::makeBoxPlot(run_times, hpSetsList, "PRM " + problem_names[i], "Number of Nodes, Neighborhood Radius", "Computation Time (ms)");
 
         }
        
-       amp::Visualizer::showFigures();
+       //amp::Visualizer::showFigures();
     }
 
 // ############ Exercise 2a ###############
@@ -138,15 +155,17 @@ int main(int argc, char** argv) {
 
             //Plan the path
             amp::Path2D path = rrt_algo.planWithFigure(problem);
-            for (auto& x : path.waypoints){
-                std::cout << x[0] << ", " << x[1] << std::endl;
-            }
+            // for (auto& x : path.waypoints){
+            //     std::cout << x[0] << ", " << x[1] << std::endl;
+            // }
+
+            std::cout << "Path Length: " << pathDistance(path) << std::endl;
 
 
             //amp::Visualizer::makeFigure(problem, path);
         }
         
-        amp::Visualizer::showFigures();
+        //amp::Visualizer::showFigures();
     }
 
 // ############ Exercise 2b ###############
@@ -154,9 +173,16 @@ int main(int argc, char** argv) {
     if (run[3]){
 
         //Comparison Metrics
-        std::vector<double> success_rates;
+        std::list<std::vector<double>> success_rates;
+        std::list<std::vector<double>> path_lengths;
+        std::list<std::vector<double>> run_times;
+
+        std::vector<double> paths;
+        std::vector<double> times;
+
 
         for (int i = 0; i < problems.size(); i++){
+
             //Get Problem 
             amp::Problem2D problem = problems[i];
 
@@ -173,37 +199,50 @@ int main(int argc, char** argv) {
             //Construct the problem
             RRTAlgo2D rrt_algo(r, p_goal, n, epsilon, xbounds, ybounds);
 
-            int success_count = 0;
+            double success_count = 0;
 
             //loop 100 times
             for (int i = 0; i < 100; i++){
+                // Start time
+                std::clock_t start = std::clock();
 
                 //Plan the path
                 amp::Path2D path = rrt_algo.plan(problem);
 
+                // End time
+                std::clock_t end = std::clock();
+
                 //Count how many success are in each benchmark
                 if (path.waypoints.size() > 0){
                     success_count++;
+                    paths.push_back(pathDistance(path));
+                    double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+                    times.push_back(elapsed);
                 }
             }
 
             std::cout << "Environment " << i+1 << "/" << problems.size() << " Completed: " << success_count << "/100 Paths Found" << std::endl;
 
             //Add success rate to vector
-            success_rates.push_back(success_count);
+            success_rates.push_back({success_count});
+            path_lengths.push_back(paths);
+            run_times.push_back(times);
 
         }
        
         //Make a bar graph
-        amp::Visualizer::makeBarGraph(success_rates, problem_names, "RRT Benchmark", "Environment", "Success Rate");
-        amp::Visualizer::showFigures();
+        amp::Visualizer::makeBoxPlot(success_rates, problem_names, "RRT Success Benchmark", "Number of Nodes, Neighborhood Radius", "Number of Successes");
+        amp::Visualizer::makeBoxPlot(path_lengths, problem_names, "RRT Path Length Benchmark", "Number of Nodes, Neighborhood Radius", "Path Length");
+        amp::Visualizer::makeBoxPlot(run_times, problem_names, "RRT Computation Time Benchmark", "Number of Nodes, Neighborhood Radius", "Computation Time (ms)");
+
+        //amp::Visualizer::showFigures();
     }
 
     //amp::HW7::hint();
 
     //Show figures
-    //Visualizer::showFigures();
+    Visualizer::showFigures();
 
-    amp::HW7::grade<PRMAlgo2D, RRTAlgo2D>("carson.kohlbrenner@colorado.edu", argc, argv);
+    //amp::HW7::grade<PRMAlgo2D, RRTAlgo2D>("carson.kohlbrenner@colorado.edu", argc, argv);
     return 0;
 }

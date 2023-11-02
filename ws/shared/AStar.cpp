@@ -1,7 +1,7 @@
 #include "Astar.h"
 #include <queue>
 
-AstarNode::AstarNode(amp::Node node, double edgeWeightFromStart, double heuristic, double edgeWeightFromParent, AstarNode* parent, std::vector<AstarNode*> children)
+AstarNode::AstarNode(amp::Node node, double edgeWeightFromStart, double heuristic, double edgeWeightFromParent, std::shared_ptr<AstarNode> parent, std::vector<std::shared_ptr<AstarNode>> children)
         : node(node), edgeWeightFromStart(edgeWeightFromStart), heuristic(heuristic), edgeWeightFromParent(edgeWeightFromParent), parent(parent), children(children) {}
 
 // MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic) {
@@ -22,7 +22,7 @@ void AstarNode::print(){
 }
 
 struct CompareAstarNode{
-    bool operator()(AstarNode* const& n1, AstarNode* const& n2){
+    bool operator()(std::shared_ptr<AstarNode> const& n1, std::shared_ptr<AstarNode> const& n2){
         return n1->edgeWeightFromStart + n1->heuristic > n2->edgeWeightFromStart + n2->heuristic;
     }
 };
@@ -33,14 +33,14 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     
     //Create Priority List
     //std::vector<AstarNode*> O;
-    std::priority_queue<AstarNode*, std::vector<AstarNode*>, CompareAstarNode> O;
+    std::priority_queue<std::shared_ptr<AstarNode>, std::vector<std::shared_ptr<AstarNode>>, CompareAstarNode> O;
 
     //Processed List
     //std::vector<AstarNode*> C;
-    std::map <amp::Node, AstarNode*> C;
+    std::map <amp::Node, std::shared_ptr<AstarNode>> C;
 
     //Start from initial Node
-    AstarNode* initNode = new AstarNode(problem.init_node, 0, heuristic(problem.init_node), 0, nullptr, std::vector<AstarNode*>());
+    std::shared_ptr<AstarNode> initNode = std::make_shared<AstarNode>(problem.init_node, 0, heuristic(problem.init_node), 0, nullptr, std::vector<std::shared_ptr<AstarNode>>());
 
     //Debugging
     //initNode->print();
@@ -52,10 +52,10 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     int counter = 1;
 
     //Repeat until prioirty list is exhausted
-    while(O.size() > 0 && counter < 1000000){
+    while(O.size() > 0 && counter < 100000){
 
         //Get the current node
-        AstarNode* parent = O.top();
+        std::shared_ptr<AstarNode> parent = O.top();
 
         //std::cout << "Processing Node " << parent->node << std::endl;
 
@@ -68,9 +68,9 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
         //Check if the goal node was reached
         if (parent->node == problem.goal_node){
-            std::cout << "Goal Reached!" << std::endl;
-            std::cout << "Iterations: " << counter << std::endl;
-            printPath(parent);
+            //std::cout << "Goal Reached!" << std::endl;
+            //std::cout << "Iterations: " << counter << std::endl;
+            //printPath(parent);
 
             //Build the path
             GraphSearchResult result;
@@ -82,10 +82,10 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
             }
             result.node_path.push_front(parent->node);
 
-            //Delete the pointers to prevent memory leak
-            for (auto it = C.begin(); it != C.end(); it++){
-                delete it->second;
-            }
+            // //Delete the pointers to prevent memory leak
+            // for (auto it = C.begin(); it != C.end(); it++){
+            //     delete it->second;
+            // }
 
             return result;
         }
@@ -111,7 +111,7 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
 
 
             //Create child node and add to parent children path
-            AstarNode* child = new AstarNode(children[i], parent->edgeWeightFromStart + edges[i], heuristic(children[i]), edges[i], parent, std::vector<AstarNode*>());
+            std::shared_ptr<AstarNode> child = std::make_shared<AstarNode>(children[i], parent->edgeWeightFromStart + edges[i], heuristic(children[i]), edges[i], parent, std::vector<std::shared_ptr<AstarNode>>());
             //parent->children.push_back(child);
 
             // Add the child to the priority queue
@@ -127,8 +127,8 @@ MyAStarAlgo::GraphSearchResult MyAStarAlgo::search(const amp::ShortestPathProble
     }
 
     //If the priority queue is exhausted, return an empty path
-    std::cout << "No path found!" << std::endl;
-    std::cout << "Iterations: " << counter << std::endl;
+    //std::cout << "No path found!" << std::endl;
+    //std::cout << "Iterations: " << counter << std::endl;
 
     return GraphSearchResult();
 }
@@ -154,7 +154,7 @@ amp::Path MyAStarAlgo::searchPath(const amp::ShortestPathProblem& problem, const
     return path;
 }
 
-void MyAStarAlgo::printPath(AstarNode* node){
+void MyAStarAlgo::printPath(std::shared_ptr<AstarNode> node){
     std::cout << "Total Cost of " << node->edgeWeightFromStart << std::endl;
     std::cout << "Path: " << node->node;
     while (node->parent != nullptr){

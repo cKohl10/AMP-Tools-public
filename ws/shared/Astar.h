@@ -5,13 +5,13 @@
 //#include "hw/HW6.h"
 
 struct AstarNode{
-    AstarNode(amp::Node node, double edgeWeightFromStart, double heuristic, double edgeWeightFromParent, AstarNode* parent, std::vector<AstarNode*> children);
+    AstarNode(amp::Node node, double edgeWeightFromStart, double heuristic, double edgeWeightFromParent, std::shared_ptr<AstarNode> parent, std::vector<std::shared_ptr<AstarNode>> children);
     amp::Node node;
     double edgeWeightFromStart;
     double heuristic;
     double edgeWeightFromParent;
-    AstarNode* parent;
-    std::vector<AstarNode*> children;
+    std::shared_ptr<AstarNode> parent;
+    std::vector<std::shared_ptr<AstarNode>> children;
     bool processed = false;
 
     void print();
@@ -31,6 +31,6 @@ class MyAStarAlgo : public amp::AStar {
         amp::Path searchPath(const amp::ShortestPathProblem& problem, const amp::SearchHeuristic& heuristic, std::map<amp::Node, Eigen::VectorXd> node_map);
             
         //Print out the final path found
-        void printPath(AstarNode* node);
+        void printPath(std::shared_ptr<AstarNode> node);
 
 };
