@@ -16,5 +16,9 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
         virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
     
     private:
+        double n; //number or RRT samples
+        double r; //stepsize of rrt
+        double p_goal; //probability of sampling goal
+        double r_goal; //radius of goal
 
 };
