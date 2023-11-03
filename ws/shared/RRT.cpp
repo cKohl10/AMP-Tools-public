@@ -182,3 +182,224 @@ amp::Node RRTAlgo2D::nearestNeighbor(const Eigen::VectorXd& q_rand){
     return nearest_node;
 
 }
+
+//################ Multi Agent Centralized RRT ################
+MACentralized::MACentralized(){
+    this->r = 0.5;
+    this->p_goal = 0.05;
+    this->n = 7500;
+    this->epsilon = 0.5;
+    this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
+}
+
+MACentralized::MACentralized(double r, double p_goal, int n, double epsilon){
+    this->r = r;
+    this->p_goal = p_goal;
+    this->n = n;
+    this->epsilon = epsilon;
+    this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
+}
+
+
+amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& problem){
+
+    //Update Bounds
+    Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
+    Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
+    bounds[0] = xbounds;
+    bounds[1] = ybounds;
+
+    //Debug
+    std::cout << "Running Multi Agent Centralized RRT Algorithm..." << std::endl;
+
+    //Make Path Object
+    amp::MultiAgentPath2D ma_path;
+
+    //Initialize the root node
+    amp::Node root_node = 0;
+    std::vector<Eigen::Vector2d> q_root;
+
+    //Assign all the initial states to the root node
+    for (auto& x : problem.agent_properties) q_root.push_back(x.q_init);
+    ma2d_node_map[root_node] = q_root;
+
+    //Define a size for the future nodes
+    int node_size = q_root.size();
+    //printState(q_root, "Root Node");
+
+    //Initialize the goal node
+    amp::Node goal_node = 1;
+    std::vector<Eigen::Vector2d> q_goal;
+    for (auto& x :problem.agent_properties) q_goal.push_back(x.q_goal);
+
+    //Inialize node counter
+    amp::Node node_counter = 2;
+
+    //Start search loop
+    while (node_counter < n){
+
+        //Create a new node the same dimension as the init_state
+        std::vector<Eigen::Vector2d> q_rand;
+
+        //Sample random node with probability p_goal
+        if (randomDouble(0, 1) > p_goal){
+            std::cout << "Sampling Random Node..." << std::endl;
+
+            //Sample random node location
+            for (int j = 0; j < node_size; j++) {
+                Eigen::Vector2d q_rand_2d = {randomDouble(bounds[0][0], bounds[0][1]), randomDouble(bounds[1][0], bounds[1][1])};
+                q_rand.push_back(q_rand_2d);
+            }
+
+        } else{
+            std::cout << "Sampling Goal Node..." << std::endl;
+            //Sample goal node location
+            q_rand = q_goal;
+        }
+
+        //Find the nearest node to the random node
+        //std::cout << "Finding Nearest Node..." << std::endl;
+        amp::Node nearest_node = nearestNeighbor(q_rand);
+        std::vector<Eigen::Vector2d> q_near = ma2d_node_map[nearest_node];
+
+        //Create a new node in the direction of the random node
+        std::vector<Eigen::Vector2d> q_new;
+        for (int i = 0; i < q_near.size(); i++) q_new.push_back(q_near[i] + (q_rand[i] - q_near[i]).normalized() * r);
+
+        //Check if the new node is in collision
+        if (isSubpathCollisionFree(q_near, q_new, problem.obstacles)){
+            
+            //Add the new node to the node map
+            ma2d_node_map[node_counter] = q_new;
+
+            //Add the new node to the graph
+            graph.connect(nearest_node, node_counter, r);
+
+            
+            if (isSystemInGoal(q_new, q_goal)){
+                std::cout << "Goal Reached!" << std::endl;
+
+                //Add the goal node to the node map
+                ma2d_node_map[goal_node] = q_goal;
+
+                //Add the goal node to the graph
+                graph.connect(node_counter, goal_node, r);
+
+                //Build the path
+                ma_path.agent_paths = backoutPath(goal_node);
+    
+                return ma_path;
+            }
+            
+
+            node_counter++;
+
+        }
+        std::cout << "Node " << node_counter << "/" << n << " Created" << std::endl;
+
+    }
+
+    //Check the graph made by the generic planner
+    //amp::Visualizer::makeFigure(problem, graph, ma2d_node_map);
+
+    std::cout << "Goal not found! Backing out path..." << std::endl;
+    ma_path.agent_paths = backoutPath(nearestNeighbor(q_goal));
+    
+    return ma_path;
+};
+
+std::vector<Eigen::Vector2d> MACentralized::decompose2D(Eigen::VectorXd q){
+    std::vector<Eigen::Vector2d> q_2d;
+    int n = q.size()/2;
+
+    for (int i = 0; i < n; i++){
+        Eigen::Vector2d q_i;
+        q_i << q[2*i], q[2*i+1];
+        q_2d.push_back(q_i);
+    }
+
+    return q_2d;
+}
+
+Eigen::VectorXd MACentralized::compose2D(std::vector<Eigen::Vector2d> q){
+    Eigen::VectorXd q_nd;
+    int n = q.size();
+
+    for (int i = 0; i < n; i++){
+        q_nd.conservativeResize(2*i+2);
+        q_nd[2*i] = q[i][0];
+        q_nd[2*i+1] = q[i][1];
+    }
+
+    return q_nd;
+}
+
+amp::Node MACentralized::nearestNeighbor(const std::vector<Eigen::Vector2d>& q_rand){
+    double min_dist = INT16_MAX;
+    amp::Node nearest_node;
+
+    for (auto& x : ma2d_node_map){
+        //std::cout << "Key: " << x.first << std::endl;
+        //std::cout << "Value: " << x.second << std::endl;
+
+        double dist = 0;
+        for (int i = 0; i < x.second.size(); i++) dist = dist + (x.second[i] - q_rand[i]).norm();
+
+        if (dist < min_dist){
+            min_dist = dist;
+            nearest_node = x.first;
+        }
+    }
+
+    return nearest_node;
+}
+
+bool MACentralized::isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q1, const std::vector<Eigen::Vector2d>& q2, const std::vector<amp::Obstacle2D>& obstacles){
+    // //Check if the path is collision free for each path between the nodes
+    for (int i = 0; i < q1.size(); i++){
+        if (lineCollisionDection2D(obstacles, q1[i], q2[i]) == false) return false;
+    }
+    return true;
+}
+
+bool MACentralized::isSystemInGoal(std::vector<Eigen::Vector2d> q, std::vector<Eigen::Vector2d> q_goal){
+    for (int i = 0; i < q.size(); i++){
+        if ((q[i] - q_goal[i]).norm() > epsilon) return false;
+    }
+    return true;
+}
+
+std::vector<amp::Path2D> MACentralized::backoutPath(amp::Node final_node){
+    std::vector<amp::Path2D> paths;
+
+    std::cout << "Final Node: " << final_node << " has " << ma2d_node_map[final_node].size() << " robot positions" <<std::endl;
+
+    //Build the path by repeating the path and forming a vector of path2ds   
+    for(int i = 0; i < ma2d_node_map[final_node].size(); i++){
+
+        //Start from the given node
+        amp::Node curr_node = final_node;
+
+        //Make new path
+        amp::Path2D path_2d;
+
+        while (curr_node != 0){
+            path_2d.waypoints.push_back((ma2d_node_map[curr_node])[i]);
+            curr_node = graph.parents(curr_node)[0];
+        }
+        path_2d.waypoints.push_back((ma2d_node_map[curr_node])[i]);
+        std::reverse(path_2d.waypoints.begin(), path_2d.waypoints.end());
+
+        //Add the path to the vector of paths
+        paths.push_back(path_2d);
+    }
+    return paths;
+}
+
+void MACentralized::printState(std::vector<Eigen::Vector2d> state, std::string name){
+    std::cout << name << ": ";
+    for (int i = 0; i < state.size(); i++){
+        std::cout << "(" << state[i][0] << ", " << state[i][1] << ") ";
+    }
+    std::cout << std::endl;
+}
