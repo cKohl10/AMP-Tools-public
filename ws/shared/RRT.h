@@ -49,7 +49,7 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
     public:
         MACentralized();
 
-        MACentralized(double r, double p_goal, int n, double epsilon);
+        MACentralized(double r, double p_goal, int n, double epsilon, int m_max);
 
         //######## Multi Agent Centralized RRT #########
         virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
@@ -66,7 +66,7 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
         amp::Node nearestNeighbor(const std::vector<Eigen::Vector2d>& q_rand);
 
         //Checks robot collisions and collisions with other robots for valid paths
-        bool isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q1, const std::vector<Eigen::Vector2d>& q2, const std::vector<amp::Obstacle2D>& obstacles);
+        bool isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q_near, const std::vector<Eigen::Vector2d>& q_new, const std::vector<amp::Obstacle2D>& obstacles);
 
         //Backs out a path for a given final node
         std::vector<amp::Path2D> backoutPath(amp::Node final_node);
@@ -84,6 +84,11 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
         double p_goal; //Probability of sampling the goal state;
         int n; //Number of samples;
         double epsilon; //Termination radius;
+        int m_max; //Maximum number of agents to process
+
+        //Problem Variables
+        double radius; //Radius of the circular agent
+        int m; //Number of agents
         std::vector<Eigen::Vector2d> bounds; //Problem bounds
 
 };

@@ -286,6 +286,39 @@ bool lineCollisionDection2D(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, 
     return false;
 }
 
+bool polyToPolyCollision(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, Eigen::Vector2d v1, double r){
+    // Next, find if any of the vertices are in collision with any of the obstacles
+    for (int i = 0; i < o.size(); i++){
+
+        // get vertices current obstacle
+        std::vector<Eigen::Vector2d> obsVertices = o[i].verticesCCW();
+
+        // now, for each vertice, check if it collides with the line between v0 and v1 and v1 and v2
+        for (int j = 0; j < obsVertices.size(); j++){
+            // check if the line between v0 and v1 and v1 and v2 collides with the line between obsVertices[j] and obsVertices[j+1]
+            if (intersect(v0,v1,obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()])){
+                return true;
+            }
+
+            //Checks for circular robot collision by radius r for each line of the obstacle 
+            // if ((closestPointOnLine(obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()], v1) - v1).norm() <= 2*r){
+            //     return true;
+            // }
+            // if ((closestPointOnLine(obsVertices[j%obsVertices.size()],obsVertices[(j+1)%obsVertices.size()], v0).norm() <= 2*r){
+            //     return true;
+            // }
+
+        }
+    }
+    return false;
+}
+
 Eigen::Vector2d vectorXdToVector2d(const Eigen::VectorXd& v) {
     return v.head<2>();
+}
+
+Eigen::Vector2d closestPointOnLine(const Eigen::Vector2d& A, const Eigen::Vector2d& B, const Eigen::Vector2d& P) {
+    Eigen::Vector2d AB = B - A;
+    double t = (P - A).dot(AB) / AB.squaredNorm();
+    return A + t * AB;
 }
