@@ -187,9 +187,9 @@ amp::Node RRTAlgo2D::nearestNeighbor(const Eigen::VectorXd& q_rand){
 MACentralized::MACentralized(){
     this->r = 0.5;
     this->p_goal = 0.05;
-    this->n = 1000;
+    this->n = 7500;
     this->epsilon = 0.5;
-    this->m_max = 2;
+    this->m_max = 100;
     this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
 }
 
@@ -198,7 +198,7 @@ MACentralized::MACentralized(double r, double p_goal, int n, double epsilon, int
     this->p_goal = p_goal;
     this->n = n;
     this->epsilon = epsilon;
-    
+    this->m_max = m_max;
     this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
 }
 
@@ -212,6 +212,13 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     bounds[1] = ybounds;
     radius = problem.agent_properties[0].radius;
     m = problem.agent_properties.size();
+
+    //Adjust for if the edge is farther out than the bounds
+    if (m_max > m) m_max = m;
+
+    //resize obstacles
+    //std::vector<amp::Obstacle2D> obstacles = expandPolygons(problem.obstacles, 0.5);
+    std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 1);
 
     //Get the working set of robots
     std::vector<amp::CircularAgentProperties> agent_properties;
@@ -277,7 +284,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
         for (int i = 0; i < q_near.size(); i++) q_new.push_back(q_near[i] + (q_rand[i] - q_near[i]).normalized() * r);
 
         //Check if the new node is in collision
-        if (isSubpathCollisionFree(q_near, q_new, problem.obstacles)){
+        if (isSubpathCollisionFree(q_near, q_new, obstacles)){
             
             //Add the new node to the node map
             ma2d_node_map[node_counter] = q_new;

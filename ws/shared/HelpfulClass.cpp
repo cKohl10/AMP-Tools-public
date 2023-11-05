@@ -322,3 +322,80 @@ Eigen::Vector2d closestPointOnLine(const Eigen::Vector2d& A, const Eigen::Vector
     double t = (P - A).dot(AB) / AB.squaredNorm();
     return A + t * AB;
 }
+
+//Finds the center point for each polygon in the workspace and scales vertices from the center
+std::vector<amp::Obstacle2D> expandPolygons(std::vector<amp::Obstacle2D> obstacles, double expansionFactor){
+    Eigen::Vector2d center; //Center point of the polygon
+    std::vector<amp::Obstacle2D> obstacles_new(obstacles.size()); //New obstacles with expanded vertices
+    int counter = 0; //Polygon counter
+
+    //Access every obstacle
+    for (amp::Obstacle2D o : obstacles){
+
+        center = Eigen::Vector2d::Zero(); //Reset the center point
+
+        //Find the center point of the polygon
+        for (Eigen::Vector2d v : o.verticesCCW()){
+            center += v;
+        }
+
+        //Average the center point
+        center /= o.verticesCCW().size();
+
+        //Print the center point location
+        //std::cout << "Center point: (" << center(0) << ", " << center(1) << ")" << std::endl;
+
+        //Scale the vertices from the center point
+        for (int i = 0; i < o.verticesCCW().size(); i++){
+            o.verticesCCW()[i] = o.verticesCCW()[i] + (o.verticesCCW()[i] - center).normalized()*expansionFactor;
+        }
+
+        //Save the expanded vertices
+        obstacles_new[counter] = o;
+        counter++;
+    }
+
+    return obstacles_new;
+}
+
+amp::Obstacle2D expandBox(amp::Obstacle2D box, double dist){
+    //Find bottom left corner of box
+    std::vector<Eigen::Vector2d> v = box.verticesCCW();
+    std::vector<Eigen::Vector2d> v_new;
+    std::vector<Eigen::Vector2d> expansion = {Eigen::Vector2d(-dist,-dist), Eigen::Vector2d(dist,-dist), Eigen::Vector2d(dist,dist), Eigen::Vector2d(-dist,dist)};
+
+    if (v.size() != 4){
+        std::cout << "Error: Box does not have 4 vertices" << std::endl;
+        return box;
+    }
+
+    //Find the minimum vertice
+    int amindex = 0;
+    for (int i = 1; i < v.size(); i++){
+        //Find the smallest norm distance. This is the bottom left corner
+        if (v[i].norm() < v[amindex].norm() ){
+            amindex = i;
+        }
+    }
+
+    //Expand the box by 1
+    for (int i = 0; i < v.size(); i++){
+        v_new.push_back(v[(i+amindex)%v.size()] + expansion[i]);
+    }
+
+    return amp::Obstacle2D(v_new);
+
+}
+
+std::vector<amp::Obstacle2D> expandBoxes(std::vector<amp::Obstacle2D> boxes, double dist){
+    std::vector<amp::Obstacle2D> boxes_new(boxes.size()); //New obstacles with expanded vertices
+    int counter = 0; //Polygon counter
+
+    //Access every obstacle
+    for (amp::Obstacle2D o : boxes){
+        boxes_new[counter] = expandBox(o, dist);
+        counter++;
+    }
+
+    return boxes_new;
+}

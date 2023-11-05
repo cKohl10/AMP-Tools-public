@@ -18,3 +18,6 @@ double vecAngle(Eigen::Vector2d v1, Eigen::Vector2d v2);
 Eigen::Vector2d vectorXdToVector2d(const Eigen::VectorXd& v);
 Eigen::Vector2d closestPointOnLine(const Eigen::Vector2d& A, const Eigen::Vector2d& B, const Eigen::Vector2d& P);
 bool polyToPolyCollision(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, Eigen::Vector2d v1, double r);
+std::vector<amp::Obstacle2D> expandPolygons(std::vector<amp::Obstacle2D> obstacles, double expansionFactor);
+amp::Obstacle2D expandBox(amp::Obstacle2D box, double dist);
+std::vector<amp::Obstacle2D> expandBoxes(std::vector<amp::Obstacle2D> boxes, double dist);
