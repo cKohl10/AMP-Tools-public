@@ -212,7 +212,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     radius = problem.agent_properties[0].radius;
     m = problem.agent_properties.size();
 
-    std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots"  << std::endl;
+    //std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots"  << std::endl;
 
     //Adjust for if the edge is farther out than the bounds
 
@@ -297,7 +297,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
             
             if (isSystemInGoal(q_new, q_goal)){
-                std::cout << "Goal Reached!" << std::endl;
+                //std::cout << "Goal Reached!" << std::endl;
 
                 //Add the goal node to the node map
                 ma2d_node_map[goal_node] = q_goal;
@@ -325,7 +325,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     //amp::Visualizer::makeFigure(problem, graph, ma2d_node_map);
 
     //############## DEBUG ################
-    std::cout << "Goal not found! Backing out path..." << std::endl;
+    //std::cout << "Goal not found! Backing out path..." << std::endl;
     for (int j = 0; j < m; j++){
         ma_path.agent_paths.push_back(amp::Path2D());
     }
@@ -395,6 +395,8 @@ amp::Node MACentralized::nearestNeighbor(const std::vector<Eigen::Vector2d>& q_r
 }
 
 bool MACentralized::isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q_near, const std::vector<Eigen::Vector2d>& q_new, const std::vector<amp::Obstacle2D>& obstacles){
+    //return true;
+    
     //Check if the paths are collision free against obstacles in the problem
     for (int i = 0; i < q_new.size(); i++){
         if (polyToPolyCollision(obstacles, q_near[i], q_new[i], radius)){
@@ -406,7 +408,7 @@ bool MACentralized::isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q
     for (int i = 0; i < q_new.size(); i++){
         for (int j = 0; j < q_new.size(); j++){
             if (i != j){
-                if ((q_new[i] - q_new[j]).norm() < 2*radius){
+                if ((q_new[i] - q_new[j]).norm() < 2.5*radius){
                     return false;
                 }
             }
@@ -499,7 +501,7 @@ amp::MultiAgentPath2D MADecentralized::plan(const amp::MultiAgentProblem2D& prob
     radius = problem.agent_properties[0].radius;
     m = problem.agent_properties.size();
 
-    std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots"  << std::endl;
+    //std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots"  << std::endl;
 
     //resize obstacles
     //std::vector<amp::Obstacle2D> obstacles = expandPolygons(problem.obstacles, 0.5);
@@ -508,7 +510,7 @@ amp::MultiAgentPath2D MADecentralized::plan(const amp::MultiAgentProblem2D& prob
     //Plan for each robot
     amp::MultiAgentPath2D ma_path;
     for (int i = 0; i < m; i++){
-        std::cout << "Planning for Robot " << i << std::endl;
+        //std::cout << "Planning for Robot " << i << std::endl;
         amp::Path2D path = GoalBiasedRRT(problem.agent_properties[i].q_init, problem.agent_properties[i].q_goal, obstacles);
 
         ma_path.agent_paths.push_back(path);
@@ -539,7 +541,7 @@ amp::Path2D MADecentralized::GoalBiasedRRT(const Eigen::Vector2d& init_state, co
     amp::Node node_counter = 2;
 
     //Initialize Loop Counter
-    int loop_counter = 1000000000;
+    int loop_counter = 0;
 
     //Start search loop
     while (node_counter < n && loop_counter < n*10){
@@ -584,7 +586,7 @@ amp::Path2D MADecentralized::GoalBiasedRRT(const Eigen::Vector2d& init_state, co
             //Check if the new node is within the termination radius
             if ((q_new - q_goal).norm() < epsilon){
 
-                std::cout << "Goal Reached!" << std::endl;
+                //std::cout << "Goal Reached!" << std::endl;
 
                 //Add the goal node to the node map
                 node_map[goal_node] = q_goal;
@@ -619,7 +621,7 @@ amp::Path2D MADecentralized::GoalBiasedRRT(const Eigen::Vector2d& init_state, co
 
     }
     
-    std::cout << "Goal not found!" << std::endl;
+    //std::cout << "Goal not found!" << std::endl;
     return path;
 }
 
@@ -633,7 +635,7 @@ bool MADecentralized::isSubpathCollisionFree(const Eigen::Vector2d& q_near, cons
     //Check if the paths are collision free against other robots
     std::vector<Eigen::Vector2d> q_others = time_of_others_map[time];
     for (Eigen::Vector2d q : q_others){
-        if ((q_new - q).norm() < 2.2*radius){
+        if ((q_new - q).norm() < 3*radius){
             return false;
         }
     }
