@@ -187,7 +187,7 @@ amp::Node RRTAlgo2D::nearestNeighbor(const Eigen::VectorXd& q_rand){
 MACentralized::MACentralized(){
     this->r = 0.5;
     this->p_goal = 0.05;
-    this->n = 7500;
+    this->n = 20000;
     this->epsilon = 0.5;
     this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
 }
@@ -218,7 +218,8 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
     //resize obstacles
     //std::vector<amp::Obstacle2D> obstacles = expandPolygons(problem.obstacles, 0.5);
-    std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 0.5);
+    //std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 0.5);
+    std::vector<amp::Obstacle2D> obstacles = expandPolygonsByEdge(problem.obstacles, 0.5);
 
     //Get the working set of robots
     std::vector<amp::CircularAgentProperties> agent_properties;
@@ -256,7 +257,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     int loop_counter = 0;
 
     //Start search loop
-    while (node_counter < n && loop_counter < n*5){
+    while (node_counter < n && loop_counter < n*10){
 
         //Create a new node the same dimension as the init_state
         std::vector<Eigen::Vector2d> q_rand;
@@ -326,23 +327,23 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
     //############## DEBUG ################
     //std::cout << "Goal not found! Backing out path..." << std::endl;
-    for (int j = 0; j < m; j++){
-        ma_path.agent_paths.push_back(amp::Path2D());
-    }
+    // for (int j = 0; j < m; j++){
+    //     ma_path.agent_paths.push_back(amp::Path2D());
+    // }
 
     // //Get the closest node to the goal
-    // amp::Node nearest_node = nearestNeighbor(q_goal);
-    //     std::cout << "Nearest Node: " << nearest_node << " is (";
-    // for (int i = 0; i < q_goal.size()-1; i++) std::cout << (ma2d_node_map[nearest_node][i] - q_goal[i]).norm() << ", ";
-    // std::cout << (ma2d_node_map[nearest_node][q_goal.size()-1] - q_goal[q_goal.size()-1]).norm();
-    // std::cout << ") away from goal state" <<std::endl;
+    amp::Node nearest_node = nearestNeighbor(q_goal);
+        std::cout << "Nearest Node: " << nearest_node << " is (";
+    for (int i = 0; i < q_goal.size()-1; i++) std::cout << (ma2d_node_map[nearest_node][i] - q_goal[i]).norm() << ", ";
+    std::cout << (ma2d_node_map[nearest_node][q_goal.size()-1] - q_goal[q_goal.size()-1]).norm();
+    std::cout << ") away from goal state" <<std::endl;
 
-    // //Add the goal node to the node map in case the nearest was close
-    // ma2d_node_map[goal_node] = q_goal;
+    //Add the goal node to the node map in case the nearest was close
+    ma2d_node_map[goal_node] = q_goal;
 
-    // //Add the goal node to the graph
-    // graph.connect(nearest_node, goal_node, r);
-    // ma_path.agent_paths = backoutPath(nearest_node);
+    //Add the goal node to the graph
+    graph.connect(nearest_node, goal_node, r);
+    ma_path.agent_paths = backoutPath(nearest_node);
     //#######################################
     
     return ma_path;
@@ -505,7 +506,8 @@ amp::MultiAgentPath2D MADecentralized::plan(const amp::MultiAgentProblem2D& prob
 
     //resize obstacles
     //std::vector<amp::Obstacle2D> obstacles = expandPolygons(problem.obstacles, 0.5);
-    std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 0.5);
+    //std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 0.5);
+    std::vector<amp::Obstacle2D> obstacles = expandPolygonsByEdge(problem.obstacles, 0.5);
 
     //Plan for each robot
     amp::MultiAgentPath2D ma_path;
@@ -635,7 +637,7 @@ bool MADecentralized::isSubpathCollisionFree(const Eigen::Vector2d& q_near, cons
     //Check if the paths are collision free against other robots
     std::vector<Eigen::Vector2d> q_others = time_of_others_map[time];
     for (Eigen::Vector2d q : q_others){
-        if ((q_new - q).norm() < 3*radius){
+        if ((q_new - q).norm() < 4*radius){
             return false;
         }
     }

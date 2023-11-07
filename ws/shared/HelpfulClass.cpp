@@ -358,6 +358,35 @@ std::vector<amp::Obstacle2D> expandPolygons(std::vector<amp::Obstacle2D> obstacl
     return obstacles_new;
 }
 
+//Expand the polygon edges by a given distance
+std::vector<amp::Obstacle2D> expandPolygonsByEdge(std::vector<amp::Obstacle2D> obstacles, double expansionDist){
+    std::vector<amp::Obstacle2D> obstacles_new(obstacles.size()); //New obstacles with expanded vertices
+    int counter = 0; //Polygon counter
+
+    //Access every obstacle
+    for (amp::Obstacle2D o : obstacles){
+        std::vector<Eigen::Vector2d> v = o.verticesCCW(); //New vertices for the polygon
+        std::vector<Eigen::Vector2d> v_new = o.verticesCCW(); //New vertices for the polygon
+        //Find the center point of the polygon
+        for (int i = 0; i < v.size(); i++){
+            //Get an edge of the polygon
+            Eigen::Vector2d edge = v[(i+1)%v.size()] - v[i%v.size()];
+            rotateVec2d(edge, -M_PI/2.0);
+
+            //Expand the last and next vertice by the given distance
+            v_new[(i+1)%v.size()] = v_new[(i+1)%v.size()] + edge.normalized()*expansionDist;
+            v_new[i%v.size()] = v_new[i%v.size()] + edge.normalized()*expansionDist;
+        }
+
+        //Save the expanded vertices
+        obstacles_new[counter] = amp::Obstacle2D(v_new);
+        counter++;
+
+    }
+
+    return obstacles_new;
+}
+
 amp::Obstacle2D expandBox(amp::Obstacle2D box, double dist){
     //Find bottom left corner of box
     std::vector<Eigen::Vector2d> v = box.verticesCCW();

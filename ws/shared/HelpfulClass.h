@@ -21,3 +21,4 @@ bool polyToPolyCollision(std::vector<amp::Obstacle2D> o, Eigen::Vector2d v0, Eig
 std::vector<amp::Obstacle2D> expandPolygons(std::vector<amp::Obstacle2D> obstacles, double expansionFactor);
 amp::Obstacle2D expandBox(amp::Obstacle2D box, double dist);
 std::vector<amp::Obstacle2D> expandBoxes(std::vector<amp::Obstacle2D> boxes, double dist);
+std::vector<amp::Obstacle2D> expandPolygonsByEdge(std::vector<amp::Obstacle2D> obstacles, double expansionDist);

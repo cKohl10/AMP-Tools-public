@@ -10,7 +10,7 @@
 //#include "ShareCore.h"
 
 int main(int argc, char** argv) {
-    std::vector<bool> run = {false, true, false, false};
+     std::vector<bool> run = {true, false, false, false};
 
     // ############ Exercise 1 ###############
     // Multi-agent RRT
