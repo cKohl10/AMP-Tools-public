@@ -10,7 +10,7 @@
 //#include "ShareCore.h"
 
 int main(int argc, char** argv) {
-     std::vector<bool> run = {true, false, false, false};
+     std::vector<bool> run = {false, true, false, true};
 
     // ############ Exercise 1 ###############
     // Multi-agent RRT
@@ -128,9 +128,10 @@ int main(int argc, char** argv) {
                 MACentralized mac(r, p_goal, n, epsilon, m);
 
                 //Plan paths for each agent 
-                amp::MultiAgentProblem2D problem = amp::HW8::getWorkspace1(m);
-                amp::MultiAgentPath2D ma_path = mac.plan(problem);
+                //amp::MultiAgentProblem2D problem = amp::HW8::getWorkspace1(m);
+                //amp::MultiAgentPath2D ma_path = mac.plan(problem);
                 //amp::HW8::check(ma_path, problem, true);
+                amp::HW8::generateAndCheck(mac, true);
 
                 // End time
                 std::clock_t end = std::clock();
@@ -140,7 +141,7 @@ int main(int argc, char** argv) {
                 run_time.push_back(elapsed);
                 tree_size.push_back(mac.getTreeSize()); //nodes
                 //bool valid = amp::HW8::check(ma_path, problem, false);
-                valid = valid + amp::HW8::check(ma_path, problem, false);
+                //valid = valid + amp::HW8::check(ma_path, problem, false);
 
                 //Write the results to the file
                 myfile << m << ", " << i+1 <<", " << mac.getTreeSize() << ", " << elapsed << ", " << valid << "\n";

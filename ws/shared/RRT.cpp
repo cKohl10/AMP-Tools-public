@@ -236,6 +236,12 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     amp::Node root_node = 0;
     std::vector<Eigen::Vector2d> q_root;
 
+    //Check if starting incollision
+    if(!isSubpathCollisionFree(q_root, q_root, obstacles)){
+        std::cout << "Starting in Collision!" << std::endl;
+        return ma_path;
+    }
+
     //Assign all the initial states to the root node
     for (auto& x : agent_properties) q_root.push_back(x.q_init);
     ma2d_node_map[root_node] = q_root;
