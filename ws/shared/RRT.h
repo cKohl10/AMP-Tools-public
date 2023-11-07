@@ -49,7 +49,7 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
     public:
         MACentralized();
 
-        MACentralized(double r, double p_goal, int n, double epsilon, int m_max);
+        MACentralized(double r, double p_goal, int n, double epsilon, int m);
 
         //######## Multi Agent Centralized RRT #########
         virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
@@ -74,6 +74,9 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
         //Prints the state of the node
         void printState(std::vector<Eigen::Vector2d> state, std::string name);
 
+        //Gets the number of nodes in the tree
+        int getTreeSize();
+
     private:
         std::map<amp::Node, Eigen::VectorXd> node_map;
         std::map<amp::Node, std::vector<Eigen::Vector2d>> ma2d_node_map;
@@ -84,11 +87,47 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
         double p_goal; //Probability of sampling the goal state;
         int n; //Number of samples;
         double epsilon; //Termination radius;
-        int m_max; //Maximum number of agents to process
+        //int m_max; //Maximum number of agents to process
 
         //Problem Variables
         double radius; //Radius of the circular agent
         int m; //Number of agents
         std::vector<Eigen::Vector2d> bounds; //Problem bounds
 
+};
+
+class MADecentralized : public amp::DecentralizedMultiAgentRRT {
+    public:
+        MADecentralized();
+
+        MADecentralized(double r, double p_goal, int n, double epsilon, int m);
+
+        //######## Multi Agent Deentralized RRT #########
+        virtual amp::MultiAgentPath2D plan(const amp::MultiAgentProblem2D& problem) override;
+
+        amp::Path2D GoalBiasedRRT(const Eigen::Vector2d& init_state, const Eigen::Vector2d& q_goal, std::vector<amp::Obstacle2D> obstacles);
+
+        //Checks robot collisions and collisions with other robots for valid paths
+        bool isSubpathCollisionFree(const Eigen::Vector2d& q_near, const Eigen::Vector2d& q_new, const std::vector<amp::Obstacle2D>& obstacles, int time);
+
+        //Find the nearest neighbor
+        amp::Node nearestNeighbor(const Eigen::Vector2d& q_rand);
+
+    private:
+        std::map<amp::Node, Eigen::Vector2d> node_map;
+        std::map<amp::Node, int> time_map;
+        std::map<int, std::vector<Eigen::Vector2d>> time_of_others_map;
+        //amp::Graph<double> graph;
+
+        // Hyperparameters
+        double r; //Step size;
+        double p_goal; //Probability of sampling the goal state;
+        int n; //Number of samples;
+        double epsilon; //Termination radius;
+        //int m_max; //Maximum number of agents to process
+
+        //Problem Variables
+        double radius; //Radius of the circular agent
+        int m; //Number of agents
+        std::vector<Eigen::Vector2d> bounds; //Problem bounds
 };

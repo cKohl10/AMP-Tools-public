@@ -365,7 +365,7 @@ amp::Obstacle2D expandBox(amp::Obstacle2D box, double dist){
     std::vector<Eigen::Vector2d> expansion = {Eigen::Vector2d(-dist,-dist), Eigen::Vector2d(dist,-dist), Eigen::Vector2d(dist,dist), Eigen::Vector2d(-dist,dist)};
 
     if (v.size() != 4){
-        std::cout << "Error: Box does not have 4 vertices" << std::endl;
+        //std::cout << "Error: Box does not have 4 vertices" << std::endl;
         return box;
     }
 
@@ -393,7 +393,15 @@ std::vector<amp::Obstacle2D> expandBoxes(std::vector<amp::Obstacle2D> boxes, dou
 
     //Access every obstacle
     for (amp::Obstacle2D o : boxes){
-        boxes_new[counter] = expandBox(o, dist);
+        amp::Obstacle2D box = expandBox(o, dist);
+        if (box.verticesCCW().size() != 4){
+            //std::cout << "Expanding polygons instead..." << std::endl;
+            boxes_new = expandPolygons(boxes, 0.3);
+            //std::cout << "Finished expanding polygons" << std::endl;
+            return boxes_new;
+        }
+
+        boxes_new[counter] = box;
         counter++;
     }
 
