@@ -10,7 +10,7 @@
 //#include "ShareCore.h"
 
 int main(int argc, char** argv) {
-    //  std::vector<bool> run = {false, true, false, true};
+     std::vector<bool> run = {false, true, false, true};
 
     // // ############ Exercise 1 ###############
     // // Multi-agent RRT
@@ -41,11 +41,11 @@ int main(int argc, char** argv) {
     //     }
     // }
 
-    // if (run[1]){
-    //     std::cout << "##### Running Centralized Benchmarks #####" << std::endl;
-    //     //This test will run the centralized planner 100 times for each number of agents
-    //     //The results will be stored in the text file results.txt.
-    //     //The results will store the number of agents, the number of nodes in the tree, the run time, and if the solution was valid
+    if (run[1]){
+        std::cout << "##### Running Centralized Benchmarks #####" << std::endl;
+        //This test will run the centralized planner 100 times for each number of agents
+        //The results will be stored in the text file results.txt.
+        //The results will store the number of agents, the number of nodes in the tree, the run time, and if the solution was valid
 
         //Open the file
         std::ifstream myfile_read;
@@ -125,8 +125,8 @@ int main(int argc, char** argv) {
                 std::clock_t start = std::clock();
 
                 //Call centralized motion planner
-                MACentralized mac(r, p_goal, n, epsilon, m);
-                //MACentralized mac();
+                //MACentralized mac(r, p_goal, n, epsilon, m);
+                MACentralized mac;
 
                 //Plan paths for each agent 
                 //amp::MultiAgentProblem2D problem = amp::HW8::getWorkspace1(m);
@@ -148,11 +148,11 @@ int main(int argc, char** argv) {
                 myfile << m << ", " << i+1 <<", " << mac.getTreeSize() << ", " << elapsed << ", " << valid << "\n";
                 //std::cout << m_max << ", " << mac.getTreeSize() << ", " << elapsed << ", " << valid << std::endl;
 
-                std::cout << "\033[A\33[2K\r";
+                //std::cout << "\033[A\33[2K\r";
                 std::cout << "Progress: " << i+1 << "/100" << std::endl;
             }
 
-            std::cout << "\033[A\33[2K\r";
+            //std::cout << "\033[A\33[2K\r";
             std::cout << "Valid Solutions: " << valid << "/100" << std::endl;
 
             m++;

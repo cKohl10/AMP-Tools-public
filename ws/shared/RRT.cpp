@@ -361,6 +361,9 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     graph.connect(nearest_node, goal_node, r);
     ma_path.agent_paths = backoutPath(nearest_node);
     //#######################################
+
+    amp::Visualizer::makeFigure(problem, ma_path);
+    amp::Visualizer::showFigures();
     
     return ma_path;
 };
