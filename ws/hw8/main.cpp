@@ -126,12 +126,13 @@ int main(int argc, char** argv) {
 
                 //Call centralized motion planner
                 MACentralized mac(r, p_goal, n, epsilon, m);
+                //MACentralized mac();
 
                 //Plan paths for each agent 
                 //amp::MultiAgentProblem2D problem = amp::HW8::getWorkspace1(m);
                 //amp::MultiAgentPath2D ma_path = mac.plan(problem);
                 //amp::HW8::check(ma_path, problem, true);
-                amp::HW8::generateAndCheck(mac, true);
+                amp::HW8::generateAndCheck(mac);
 
                 // End time
                 std::clock_t end = std::clock();

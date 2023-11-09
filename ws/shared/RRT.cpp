@@ -187,7 +187,7 @@ amp::Node RRTAlgo2D::nearestNeighbor(const Eigen::VectorXd& q_rand){
 MACentralized::MACentralized(){
     this->r = 0.5;
     this->p_goal = 0.05;
-    this->n = 20000;
+    this->n = 50000;
     this->epsilon = 0.5;
     this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
 }
@@ -237,10 +237,12 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     std::vector<Eigen::Vector2d> q_root;
 
     //Check if starting incollision
-    if(!isSubpathCollisionFree(q_root, q_root, obstacles)){
-        std::cout << "Starting in Collision!" << std::endl;
-        return ma_path;
-    }
+    // for (Eigen::Vector2d& x : q_root){
+    //     if (collisionDetectedPoint(obstacles, x) || !isSubpathCollisionFree(q_root, q_root, obstacles)){
+    //         std::cout << "Starting in Collision!" << std::endl;
+    //         return ma_path;
+    //     }
+    // }
 
     //Assign all the initial states to the root node
     for (auto& x : agent_properties) q_root.push_back(x.q_init);
@@ -255,6 +257,14 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     std::vector<Eigen::Vector2d> q_goal;
     for (auto& x :agent_properties) q_goal.push_back(x.q_goal);
 
+    // for (Eigen::Vector2d& x : q_goal){
+    //     if (collisionDetectedPoint(obstacles, x) || !isSubpathCollisionFree(q_goal, q_goal, obstacles)){
+    //         std::cout << "Starting in Collision!" << std::endl;
+    //         return ma_path;
+    //     }
+    // }
+
+
     //Inialize node counter 2 is the right number
     //amp::Node node_counter = 100000;
     amp::Node node_counter = 2;
@@ -263,7 +273,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     int loop_counter = 0;
 
     //Start search loop
-    while (node_counter < n && loop_counter < n*10){
+    while (node_counter < n && loop_counter < n*100){
 
         //Create a new node the same dimension as the init_state
         std::vector<Eigen::Vector2d> q_rand;
@@ -339,7 +349,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
     // //Get the closest node to the goal
     amp::Node nearest_node = nearestNeighbor(q_goal);
-        std::cout << "Nearest Node: " << nearest_node << " is (";
+        std::cout << "Loop Counter = " << loop_counter << " and Node Counter = " << node_counter << ", Node: " << nearest_node << " is (";
     for (int i = 0; i < q_goal.size()-1; i++) std::cout << (ma2d_node_map[nearest_node][i] - q_goal[i]).norm() << ", ";
     std::cout << (ma2d_node_map[nearest_node][q_goal.size()-1] - q_goal[q_goal.size()-1]).norm();
     std::cout << ") away from goal state" <<std::endl;
