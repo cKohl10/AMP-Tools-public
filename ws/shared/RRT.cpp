@@ -187,7 +187,7 @@ amp::Node RRTAlgo2D::nearestNeighbor(const Eigen::VectorXd& q_rand){
 MACentralized::MACentralized(){
     this->r = 0.5;
     this->p_goal = 0.05;
-    this->n = 50000;
+    this->n = 20000;
     this->epsilon = 0.5;
     this->bounds = {Eigen::Vector2d(-10.0, 10.0), Eigen::Vector2d(-10.0, 10.0)};
 }
@@ -205,21 +205,26 @@ MACentralized::MACentralized(double r, double p_goal, int n, double epsilon, int
 amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& problem){
 
     //Update based on the problem
-    Eigen::Vector2d xbounds = {problem.x_min, problem.x_max};
-    Eigen::Vector2d ybounds = {problem.y_min, problem.y_max};
+    double bound_add = 2;
+    Eigen::Vector2d xbounds = {problem.x_min-bound_add, problem.x_max+bound_add};
+    Eigen::Vector2d ybounds = {problem.y_min-bound_add, problem.y_max+bound_add};
     bounds[0] = xbounds;
     bounds[1] = ybounds;
     radius = problem.agent_properties[0].radius;
+    for (auto& x : problem.agent_properties){
+        radii.push_back(x.radius);
+        if (x.radius > radius) radius = x.radius;
+    }
     m = problem.agent_properties.size();
 
-    //std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots"  << std::endl;
+    //std::cout << std::endl << "Running Multi Agent Centralized RRT Algorithm with " << m << " robots, largest radius = " << radius  << std::endl;
 
     //Adjust for if the edge is farther out than the bounds
 
     //resize obstacles
     //std::vector<amp::Obstacle2D> obstacles = expandPolygons(problem.obstacles, 0.5);
     //std::vector<amp::Obstacle2D> obstacles = expandBoxes(problem.obstacles, 0.5);
-    std::vector<amp::Obstacle2D> obstacles = expandPolygonsByEdge(problem.obstacles, 0.5);
+    std::vector<amp::Obstacle2D> obstacles = expandPolygonsByEdge(problem.obstacles, radius*2);
 
     //Get the working set of robots
     std::vector<amp::CircularAgentProperties> agent_properties;
@@ -273,7 +278,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
     int loop_counter = 0;
 
     //Start search loop
-    while (node_counter < n && loop_counter < n*100){
+    while (node_counter < n && loop_counter < n*10){
 
         //Create a new node the same dimension as the init_state
         std::vector<Eigen::Vector2d> q_rand;
@@ -301,7 +306,7 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
         //Create a new node in the direction of the random node
         std::vector<Eigen::Vector2d> q_new;
-        for (int i = 0; i < q_near.size(); i++) q_new.push_back(q_near[i] + (q_rand[i] - q_near[i]).normalized() * r);
+        for (int i = 0; i < q_near.size(); i++) q_new.push_back(q_near[i] + (q_rand[i] - q_near[i]).normalized() * radii[i]*2);
 
         //Check if the new node is in collision
         if (isSubpathCollisionFree(q_near, q_new, obstacles)){
@@ -325,6 +330,11 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
                 //Build the path
                 ma_path.agent_paths = backoutPath(goal_node);
     
+
+                //Debug: Make graph
+                //amp::Visualizer::makeFigure(problem, ma_path);
+                //amp::Visualizer::showFigures();
+
                 return ma_path;
             }
             
@@ -343,27 +353,27 @@ amp::MultiAgentPath2D MACentralized::plan(const amp::MultiAgentProblem2D& proble
 
     //############## DEBUG ################
     //std::cout << "Goal not found! Backing out path..." << std::endl;
-    // for (int j = 0; j < m; j++){
-    //     ma_path.agent_paths.push_back(amp::Path2D());
-    // }
+    for (int j = 0; j < m; j++){
+        ma_path.agent_paths.push_back(amp::Path2D());
+    }
 
-    // //Get the closest node to the goal
-    amp::Node nearest_node = nearestNeighbor(q_goal);
-        std::cout << "Loop Counter = " << loop_counter << " and Node Counter = " << node_counter << ", Node: " << nearest_node << " is (";
-    for (int i = 0; i < q_goal.size()-1; i++) std::cout << (ma2d_node_map[nearest_node][i] - q_goal[i]).norm() << ", ";
-    std::cout << (ma2d_node_map[nearest_node][q_goal.size()-1] - q_goal[q_goal.size()-1]).norm();
-    std::cout << ") away from goal state" <<std::endl;
+    // // //Get the closest node to the goal
+    // amp::Node nearest_node = nearestNeighbor(q_goal);
+    //     std::cout << "Loop Counter = " << loop_counter << " and Node Counter = " << node_counter << ", Node: " << nearest_node << " is (";
+    // for (int i = 0; i < q_goal.size()-1; i++) std::cout << (ma2d_node_map[nearest_node][i] - q_goal[i]).norm() << ", ";
+    // std::cout << (ma2d_node_map[nearest_node][q_goal.size()-1] - q_goal[q_goal.size()-1]).norm();
+    // std::cout << ") away from goal state" <<std::endl;
 
-    //Add the goal node to the node map in case the nearest was close
-    ma2d_node_map[goal_node] = q_goal;
+    // //Add the goal node to the node map in case the nearest was close
+    // ma2d_node_map[goal_node] = q_goal;
 
-    //Add the goal node to the graph
-    graph.connect(nearest_node, goal_node, r);
-    ma_path.agent_paths = backoutPath(nearest_node);
+    // //Add the goal node to the graph
+    // graph.connect(nearest_node, goal_node, r);
+    // ma_path.agent_paths = backoutPath(nearest_node);
     //#######################################
 
-    amp::Visualizer::makeFigure(problem, ma_path);
-    amp::Visualizer::showFigures();
+    //amp::Visualizer::makeFigure(problem, ma_path);
+    //amp::Visualizer::showFigures();
     
     return ma_path;
 };
@@ -428,7 +438,7 @@ bool MACentralized::isSubpathCollisionFree(const std::vector<Eigen::Vector2d>& q
     for (int i = 0; i < q_new.size(); i++){
         for (int j = 0; j < q_new.size(); j++){
             if (i != j){
-                if ((q_new[i] - q_new[j]).norm() < 2.5*radius){
+                if ((q_new[i] - q_new[j]).norm() < (radii[i] + radii[j] + 0.2)){
                     return false;
                 }
             }

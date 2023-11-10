@@ -91,6 +91,7 @@ class MACentralized : public amp::CentralizedMultiAgentRRT {
 
         //Problem Variables
         double radius; //Radius of the circular agent
+        std::vector<double> radii; //Radius of the circular agents
         int m; //Number of agents
         std::vector<Eigen::Vector2d> bounds; //Problem bounds
 
